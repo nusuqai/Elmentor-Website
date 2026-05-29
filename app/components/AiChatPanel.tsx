@@ -60,7 +60,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/elmentor/query', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
