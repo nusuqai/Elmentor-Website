@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { AgentUiResponse, ChatMessage, RankedMatch } from '../lib/types';
-import { CloseIcon, SendIcon, SparkIcon, BrainIcon } from './icons';
+import { CloseIcon, SendIcon, SparkleIcon, BrainIcon } from './icons';
 
 interface AiChatPanelProps {
   isOpen: boolean;
@@ -144,7 +144,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
         <div className="h-[70px] shrink-0 border-b border-light-gray px-[20px] flex items-center justify-between bg-white">
           <div className="flex items-center gap-[12px]">
             <div className="text-teal-accent">
-              <SparkIcon size={24} />
+              <SparkleIcon size={24} />
             </div>
             <div className="flex flex-col">
               <span className="text-[16px] font-semibold text-navy-base">AI Matching Agent</span>

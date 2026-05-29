@@ -150,3 +150,15 @@ export const SearchIcon: React.FC<IconProps> = ({ size = 20, ...props }) => (
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
+
+export const BrainIcon: React.FC<IconProps> = ({ size = 24, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
+    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
+    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/>
+    <path d="M6.002 6.5A3 3 0 0 1 5.603 5.125"/>
+    <path d="M11.8 18h.4"/>
+  </svg>
+);
+
