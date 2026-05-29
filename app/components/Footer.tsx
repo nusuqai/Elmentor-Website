@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { LogoMark } from './icons';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -10,7 +10,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <LogoMark size={28} />
+              <Image src="/logo.png" alt="Elmentor" width={28} height={28} className="brightness-0 invert" />
               <span className="text-[20px] font-bold tracking-tight text-white">
                 Elmentor
               </span>

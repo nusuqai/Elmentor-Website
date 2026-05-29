@@ -1,158 +1,281 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRightIcon, CheckCircleIcon } from './icons';
+import { ArrowRightIcon, CheckCircleIcon, SearchIcon } from './icons';
 import { MENTOR_PHOTOS } from '../lib/types';
 
+const POPULAR_SEARCHES = [
+  { label: 'Product Management', domain: 'Product' },
+  { label: 'Data Science', domain: 'Data' },
+  { label: 'UX Design', domain: 'Design' },
+  { label: 'Career Transition', domain: 'All' },
+  { label: 'Engineering', domain: 'Engineering' },
+];
+
+const FEATURED = [
+  { id: 'mentor_001', name: 'Maya El-Sayed', title: 'Product Manager at Spotify', exp: 8, rating: 4.9, reviews: 124, tags: ['Product Strategy', 'Roadmapping', 'PM Coaching'], badge: 'Top Mentor' },
+  { id: 'mentor_002', name: 'Omar Khaled', title: 'Software Engineering Manager', exp: 11, rating: 4.9, reviews: 98, tags: ['Leadership', 'Team Management', 'Career Growth'] },
+  { id: 'mentor_004', name: 'Lina Fawzy', title: 'Senior UX Designer', exp: 4, rating: 5.0, reviews: 76, tags: ['UX Strategy', 'Portfolio Review', 'Design Career'] },
+];
+
+const TESTIMONIALS = [
+  { name: 'Salma T.', role: 'Product Manager', quote: 'Maya helped me transition into product management with a clear roadmap and real-world advice.', mentorId: 'mentor_001' },
+  { name: 'Ahmed K.', role: 'Engineering Manager', quote: "Omar's guidance was instrumental in my promotion to Engineering Manager.", mentorId: 'mentor_002' },
+  { name: 'Nour A.', role: 'UX Designer', quote: "Lina's feedback on my portfolio and interview prep was a game changer.", mentorId: 'mentor_004' },
+];
+
+const STATS = [
+  { value: '10+', label: 'Expert mentors' },
+  { value: '500+', label: 'Mentorship sessions' },
+  { value: '4.9/5', label: 'Average rating' },
+  { value: '95%', label: 'Would recommend' },
+];
+
+const GOAL_OPTIONS = [
+  { value: 'career-growth', label: 'Career Growth' },
+  { value: 'role-transition', label: 'Role Transition' },
+  { value: 'technical-skills', label: 'Technical Skills' },
+  { value: 'leadership', label: 'Leadership' },
+];
+
+const LEVEL_OPTIONS = [
+  { value: 'entry', label: 'Entry-level' },
+  { value: 'mid', label: 'Mid-level' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'director', label: 'Director+' },
+];
+
+const FORMAT_OPTIONS = [
+  { value: 'video', label: 'Video Call' },
+  { value: 'async', label: 'Async Chat' },
+  { value: 'voice', label: 'Voice Notes' },
+];
+
 export default function Hero() {
-  const trustPoints = [
-    'Personalized mentor matching',
-    'Expert-vetted professionals',
-    'Flexible scheduling',
-  ];
+  const router = useRouter();
+  const [goal, setGoal] = useState('career-growth');
+  const [level, setLevel] = useState('mid');
+  const [format, setFormat] = useState('video');
+
+  const handleFindMatches = () => {
+    const params = new URLSearchParams({ goal, level, format });
+    router.push(`/mentors?${params.toString()}`);
+  };
 
   return (
-    <section className="relative min-h-[92vh] flex items-center overflow-hidden">
-      {/* Background layers */}
-      <div className="absolute inset-0 gradient-mesh-strong" />
-      <div className="absolute top-0 right-0 w-[60%] h-full opacity-[0.04]">
-        <Image src="/hero-bg.png" alt="" fill className="object-cover" priority />
-      </div>
+    <section className="relative bg-white pt-[88px]">
+      {/* ─── Main Hero ─── */}
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-12 lg:py-16">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
+          {/* ═══ LEFT COLUMN ═══ */}
+          <div className="flex-1 flex flex-col justify-center max-w-[560px]">
+            {/* Badge */}
 
-      <div className="relative z-10 max-w-[1280px] mx-auto w-full px-6 lg:px-10 py-32 flex flex-col lg:flex-row items-center gap-16 lg:gap-20">
-        {/* ── Left column ── */}
-        <div className="flex-1 max-w-[640px]">
-          <div className="inline-flex items-center gap-2 bg-teal/[0.08] text-teal px-4 py-1.5 rounded-full text-[13px] font-semibold mb-6 border border-teal/[0.12]">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal" />
-            Personalized Mentorship
+            {/* Headline */}
+            <h1 className="text-[44px] md:text-[52px] lg:text-[58px] font-bold leading-[1.08] tracking-tight text-navy-base mb-5">
+              Clarity today.
+              <br />
+              <span className="text-gradient-purple">Confidence</span> tomorrow.
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-[17px] md:text-[18px] leading-[1.65] text-text-secondary max-w-[480px] mb-8">
+              Connect with vetted professionals who understand your goals and help you take the right steps forward.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-10">
+              <Link
+                href="/chat"
+                className="inline-flex items-center justify-center gap-2.5 bg-navy-base text-white text-[15px] font-semibold px-7 py-3.5 rounded-full hover:bg-deep-navy transition-all duration-300 hover:shadow-elevated hover:-translate-y-0.5"
+              >
+                Find My Mentor
+                <ArrowRightIcon size={16} />
+              </Link>
+              <Link
+                href="/mentors"
+                className="inline-flex items-center justify-center gap-2 bg-white border border-border text-navy-base text-[15px] font-semibold px-7 py-3.5 rounded-full hover:bg-surface transition-all duration-200"
+              >
+                Browse Mentors
+              </Link>
+            </div>
+
+            {/* Trust badges */}
+            <div className="flex flex-wrap gap-x-5 gap-y-2 mb-10">
+              {['Personalized matches', 'Vetted experts', 'Private & secure', 'Flexible scheduling'].map((item, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-[13px] text-text-secondary">
+                  <CheckCircleIcon size={15} className="text-green shrink-0" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap gap-x-8 gap-y-4 pt-8 border-t border-border/60">
+              {STATS.map((s, i) => (
+                <div key={i}>
+                  <p className="text-[24px] font-bold text-navy-base leading-none">{s.value}</p>
+                  <p className="text-[13px] text-text-muted mt-1">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <h1 className="text-[48px] md:text-[56px] lg:text-[64px] font-bold leading-[1.08] tracking-tight text-navy-base mb-6">
-            Your Career Growth{' '}
-            <br className="hidden md:block" />
-            Starts With{' '}
-            <span className="text-gradient-purple">
-              The Right Mentor
-            </span>
-          </h1>
+          {/* ═══ RIGHT COLUMN ═══ */}
+          <div className="flex-1 flex flex-col gap-6 max-w-[600px]">
+            {/* ── Search Card ── */}
+            <div className="bg-white rounded-2xl border border-border shadow-card p-6">
+              <h2 className="text-[20px] font-bold text-navy-base mb-1">Find your right mentor</h2>
+              <p className="text-[14px] text-text-muted mb-5">Tell us about your goals and we will match you with the right expert.</p>
 
-          <p className="text-[18px] md:text-[20px] leading-[1.6] text-text-secondary max-w-[520px] mb-10">
-            Connect with experienced professionals who understand your goals.
-            Get 1-on-1 guidance tailored to where you are and where you want to go.
-          </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div className="flex flex-col">
+                  <span className="text-[11px] text-text-muted font-medium mb-1">What do you want help with?</span>
+                  <select
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    className="bg-surface border border-border rounded-lg px-3 py-2.5 text-[14px] font-medium text-navy-base focus:outline-none focus:border-teal appearance-none cursor-pointer"
+                  >
+                    {GOAL_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] text-text-muted font-medium mb-1">Your experience level</span>
+                  <select
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                    className="bg-surface border border-border rounded-lg px-3 py-2.5 text-[14px] font-medium text-navy-base focus:outline-none focus:border-teal appearance-none cursor-pointer"
+                  >
+                    {LEVEL_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] text-text-muted font-medium mb-1">Preferred format</span>
+                  <select
+                    value={format}
+                    onChange={(e) => setFormat(e.target.value)}
+                    className="bg-surface border border-border rounded-lg px-3 py-2.5 text-[14px] font-medium text-navy-base focus:outline-none focus:border-teal appearance-none cursor-pointer"
+                  >
+                    {FORMAT_OPTIONS.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
-            <Link
-              href="/chat"
-              className="inline-flex items-center justify-center gap-2.5 bg-navy-base text-white text-[16px] font-semibold px-8 py-4 rounded-full hover:bg-deep-navy transition-all duration-300 hover:shadow-elevated hover:-translate-y-0.5"
-            >
-              Find My Mentor
-              <ArrowRightIcon size={18} />
-            </Link>
+              {/* Popular */}
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                <SearchIcon size={14} className="text-text-muted shrink-0" />
+                <span className="text-[12px] text-text-muted font-medium">Popular:</span>
+                {POPULAR_SEARCHES.map((s, i) => (
+                  <Link
+                    key={i}
+                    href={`/mentors?domain=${s.domain}`}
+                    className="text-[12px] font-medium text-text-secondary hover:text-teal transition-colors"
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
+
+              <button
+                onClick={handleFindMatches}
+                className="w-full inline-flex items-center justify-center gap-2 bg-navy-base text-white text-[14px] font-semibold py-3 rounded-lg hover:bg-deep-navy transition-colors cursor-pointer"
+              >
+                Find Matches
+              </button>
+            </div>
+
+            {/* ── Featured Mentor Cards ── */}
+            <div className="grid grid-cols-3 gap-3">
+              {FEATURED.map((m) => (
+                <Link
+                  key={m.id}
+                  href="/mentors"
+                  className="group bg-white rounded-xl border border-border/60 overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  <div className="relative h-[120px] md:h-[140px] overflow-hidden">
+                    <Image
+                      src={MENTOR_PHOTOS[m.id]}
+                      alt={m.name}
+                      fill
+                      sizes="(max-width: 768px) 33vw, 200px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    {m.badge && (
+                      <div className="absolute top-2 left-2 bg-teal text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                        {m.badge}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-[13px] font-semibold text-navy-base leading-tight flex items-center gap-1">
+                      {m.name}
+                      <CheckCircleIcon size={12} className="text-teal shrink-0" />
+                    </p>
+                    <p className="text-[11px] text-text-muted mt-0.5 leading-snug truncate">{m.title}</p>
+                    <div className="flex items-center gap-1 mt-2 text-[11px] text-text-secondary">
+                      <span className="text-[#F7B731]">&#9733;</span>
+                      <span className="font-semibold">{m.rating}</span>
+                      <span className="text-text-muted">({m.reviews})</span>
+                      <span className="text-text-muted mx-1">&#183;</span>
+                      <span>{m.exp} yrs exp.</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {m.tags.slice(0, 2).map((t, j) => (
+                        <span key={j} className="text-[9px] font-medium text-text-muted bg-surface px-1.5 py-0.5 rounded">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
             <Link
               href="/mentors"
-              className="inline-flex items-center justify-center gap-2 bg-white/70 backdrop-blur-sm border border-border text-navy-base text-[16px] font-semibold px-8 py-4 rounded-full hover:bg-white hover:shadow-card transition-all duration-300"
+              className="self-center inline-flex items-center gap-1.5 text-[14px] font-semibold text-navy-base hover:text-teal transition-colors group"
             >
-              Browse Mentors
+              View all mentors
+              <ArrowRightIcon size={14} className="transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
+        </div>
+      </div>
 
-          <div className="flex flex-col gap-3">
-            {trustPoints.map((point, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-[15px] text-text-secondary">
-                <CheckCircleIcon size={18} className="text-green shrink-0" />
-                <span>{point}</span>
+      {/* ─── Testimonials Strip ─── */}
+      <div className="border-t border-border/40 bg-surface/40">
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-6">
+          <div className="grid md:grid-cols-3 gap-6 items-start">
+            {TESTIMONIALS.map((t, i) => (
+              <div key={i} className="flex gap-3">
+                <Image
+                  src={MENTOR_PHOTOS[t.mentorId]}
+                  alt={t.name}
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover w-10 h-10 shrink-0 mt-0.5"
+                />
+                <div>
+                  <p className="text-[13px] text-text-secondary leading-relaxed italic mb-1.5">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <p className="text-[12px] text-text-muted">
+                    <span className="font-semibold text-navy-base">{t.name}</span>
+                    {' '}&middot;{' '}{t.role}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* ── Right column — floating mentor cards ── */}
-        <div className="flex-1 relative w-full max-w-[520px] min-h-[440px] hidden lg:flex items-center justify-center">
-          {/* Card 1 — top left */}
-          <div className="absolute top-4 left-0 glass shadow-glass rounded-xl p-4 w-[240px] animate-float z-10 hover:shadow-glass-hover transition-shadow duration-300">
-            <div className="flex items-center gap-3 mb-3">
-              <Image
-                src={MENTOR_PHOTOS.mentor_001}
-                alt="Maya El-Sayed"
-                width={48}
-                height={48}
-                className="rounded-full object-cover w-12 h-12"
-              />
-              <div>
-                <p className="text-[14px] font-semibold text-navy-base leading-tight">Maya El-Sayed</p>
-                <p className="text-[12px] text-text-muted">Product Management</p>
-              </div>
-            </div>
-            <p className="text-[12px] text-text-secondary leading-relaxed italic">
-              &ldquo;Helped me transition from analyst to PM in 4 months.&rdquo;
-            </p>
-          </div>
-
-          {/* Card 2 — center right */}
-          <div className="absolute top-[140px] right-0 glass shadow-glass rounded-xl p-4 w-[260px] animate-float-delay z-20 hover:shadow-glass-hover transition-shadow duration-300">
-            <div className="flex items-center gap-3 mb-3">
-              <Image
-                src={MENTOR_PHOTOS.mentor_002}
-                alt="Omar Khaled"
-                width={48}
-                height={48}
-                className="rounded-full object-cover w-12 h-12"
-              />
-              <div>
-                <p className="text-[14px] font-semibold text-navy-base leading-tight">Omar Khaled</p>
-                <p className="text-[12px] text-text-muted">Software Engineering</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green" />
-              <span className="text-[12px] text-text-secondary">11 years experience</span>
-            </div>
-          </div>
-
-          {/* Card 3 — bottom left */}
-          <div className="absolute bottom-8 left-8 glass shadow-glass rounded-xl p-4 w-[220px] animate-float-delay-2 z-10 hover:shadow-glass-hover transition-shadow duration-300">
-            <div className="flex items-center gap-3">
-              <Image
-                src={MENTOR_PHOTOS.mentor_004}
-                alt="Lina Fawzy"
-                width={40}
-                height={40}
-                className="rounded-full object-cover w-10 h-10"
-              />
-              <div>
-                <p className="text-[13px] font-semibold text-navy-base leading-tight">Lina Fawzy</p>
-                <p className="text-[11px] text-text-muted">UX Design</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Background decorative circle */}
-          <div className="absolute w-[300px] h-[300px] rounded-full bg-teal/[0.04] blur-3xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
-      </div>
-
-      {/* ── Scrolling ticker ── */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border/40 bg-white/50 backdrop-blur-sm py-3 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap inline-flex">
-          {[...Array(3)].map((_, rep) => (
-            <span key={rep} className="inline-flex items-center">
-              {[
-                'Maya El-Sayed  ·  Product',
-                'Omar Khaled  ·  Engineering',
-                'Nour Hassan  ·  Marketing',
-                'Lina Fawzy  ·  Design',
-                'Hassan Adel  ·  Data',
-                'Sara Mahmoud  ·  HR',
-                'Karim Youssef  ·  Cybersecurity',
-                'Dalia Nasser  ·  Sales',
-                'Yara Amin  ·  Finance',
-                'Tarek Salem  ·  Operations',
-              ].map((item, i) => (
-                <span key={i} className="text-[13px] text-text-muted font-medium mx-8">{item}</span>
-              ))}
-            </span>
-          ))}
         </div>
       </div>
     </section>

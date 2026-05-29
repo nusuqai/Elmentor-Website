@@ -11,17 +11,17 @@ export default function ValueProps() {
     {
       icon: <ShieldCheckIcon size={28} />,
       title: 'Vetted Experts',
-      description: 'Every mentor is a working professional with real experience. No hobbyists, no resellers — just people who have been where you want to go.',
+      description: 'Every mentor is a working professional with real experience. No hobbyists, no resellers just people who have been where you want to go.',
     },
     {
       icon: <MessageCircleIcon size={28} />,
       title: 'Flexible Communication',
-      description: 'Video calls, async chat, voice notes — your mentorship adapts to your life, not the other way around.',
+      description: 'Video calls, async chat, voice notes your mentorship adapts to your life, not the other way around.',
     },
     {
       icon: <TrendingUpIcon size={28} />,
       title: 'Real Career Growth',
-      description: 'Our mentees don\'t just learn — they land roles, earn promotions, and build the confidence to lead.',
+      description: 'Our mentees don\'t just learn they land roles, earn promotions, and build the confidence to lead.',
     },
   ];
 

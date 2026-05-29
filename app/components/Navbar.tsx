@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LogoMark, MenuIcon, CloseIcon, ArrowRightIcon } from './icons';
+import { MenuIcon, CloseIcon, ArrowRightIcon } from './icons';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,14 +36,21 @@ export default function Navbar() {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           scrolled
-            ? 'glass-strong shadow-glass h-[64px]'
-            : 'bg-transparent h-[72px]'
+            ? 'bg-white/90 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.06)] h-[64px]'
+            : 'bg-white h-[72px]'
         }`}
       >
         <div className="max-w-[1280px] mx-auto h-full flex items-center justify-between px-6 lg:px-10">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group" aria-label="Elmentor Home">
-            <LogoMark size={34} className="transition-transform duration-300 group-hover:scale-105" />
+            <Image
+              src="/logo.png"
+              alt="Elmentor"
+              width={34}
+              height={34}
+              className="transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
             <span className="text-[22px] font-bold tracking-tight text-navy-base">
               Elmentor
             </span>
@@ -87,7 +95,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute top-[64px] left-0 right-0 glass-strong shadow-elevated p-6 flex flex-col gap-4 animate-fade-up">
+          <div className="absolute top-[64px] left-0 right-0 bg-white shadow-elevated p-6 flex flex-col gap-4 animate-fade-up">
             {links.map((link) => (
               <Link
                 key={link.href}

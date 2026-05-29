@@ -9,10 +9,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Elmentor — Find Your Perfect Mentor",
+  title: "Elmentor - Find Your Perfect Mentor",
   description:
     "Connect with experienced professionals who understand your goals. Get personalized mentorship to accelerate your career growth.",
   keywords: ["mentorship", "career growth", "professional development", "mentor matching"],
+  icons: {
+    icon: "/favicon.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
