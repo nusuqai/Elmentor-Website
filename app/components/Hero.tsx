@@ -68,7 +68,7 @@ export default function Hero() {
   return (
     <section className="relative bg-white pt-[88px]">
       {/* ─── Main Hero ─── */}
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-12 lg:py-16">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-6 lg:py-16">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           {/* ═══ LEFT COLUMN ═══ */}
           <div className="flex-1 flex flex-col justify-center max-w-[560px]">

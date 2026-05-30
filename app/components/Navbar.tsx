@@ -46,8 +46,8 @@ export default function Navbar() {
             <Image
               src="/logo.png"
               alt="Elmentor"
-              width={34}
-              height={34}
+              width={38}
+              height={38}
               className="transition-transform duration-300 group-hover:scale-105"
               priority
             />

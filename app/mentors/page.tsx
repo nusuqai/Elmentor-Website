@@ -185,7 +185,7 @@ function MentorsContent() {
               return (
                 <div
                   key={mentor.id}
-                  className="group bg-white rounded-2xl border border-border/60 overflow-hidden hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300"
+                  className="group bg-white rounded-2xl border border-border/60 overflow-hidden hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 flex flex-col"
                 >
                   {/* Photo */}
                   <div className="relative h-[220px] bg-surface overflow-hidden">
@@ -219,7 +219,7 @@ function MentorsContent() {
                   </div>
 
                   {/* Body */}
-                  <div className="p-5">
+                  <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-center gap-5 text-[13px] text-text-secondary mb-4">
                       <span className="flex items-center gap-1.5">
                         <BriefcaseIcon size={14} className="text-text-muted" />
@@ -252,7 +252,7 @@ function MentorsContent() {
                       &ldquo;{mentor.fit_notes[0]}&rdquo;
                     </p>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 mt-auto">
                       <button
                         onClick={() => setSelectedMentor(mentor)}
                         className="flex-1 text-center text-[13px] font-semibold text-navy-base border border-border rounded-lg py-2.5 hover:bg-surface transition-colors cursor-pointer"
