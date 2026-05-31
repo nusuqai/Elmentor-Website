@@ -28,7 +28,7 @@ const TESTIMONIALS = [
 ];
 
 const STATS = [
-  { value: '10+', label: 'Expert mentors' },
+  { value: '30+', label: 'Expert mentors' },
   { value: '500+', label: 'Mentorship sessions' },
   { value: '4.9/5', label: 'Average rating' },
   { value: '95%', label: 'Would recommend' },

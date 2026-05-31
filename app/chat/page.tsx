@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react';
+import React, { useState, useRef, useEffect, Suspense, useMemo, useCallback, useId } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { SendIcon, SparkleIcon, ArrowRightIcon, ChevronDownIcon } from '../components/icons';
+import { SendIcon, SparkleIcon, ArrowRightIcon, ChevronDownIcon, BriefcaseIcon, ClockIcon, GlobeIcon } from '../components/icons';
 import type { AgentUiResponse, ChatMessage, RankedMatch, Mentor } from '../lib/types';
+import { MENTOR_PHOTOS } from '../lib/types';
 import mentorsData from '../data/mentors/en';
+import MentorDetailModal from '../components/MentorDetailModal';
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 
@@ -57,45 +59,16 @@ function ChatPageContent() {
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState('');
   const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
-  const [mounted, setMounted] = useState(false);
-  const [sessionId, setSessionId] = useState('');
+  const [selectedMatch, setSelectedMatch] = useState<RankedMatch | null>(null);
+  const [viewProfileMentor, setViewProfileMentor] = useState<Mentor | null>(null);
 
-  const sessionIdRef = useRef('');
+  const reactId = useId();
+  const sessionId = reactId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'session';
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initDone = useRef(false);
 
-  // Generate session ID only on client to avoid hydration mismatch
-  useEffect(() => {
-    const id = Math.random().toString(36).slice(2, 10);
-    sessionIdRef.current = id;
-    setSessionId(id);
-    const timer = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Auto-scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  // Handle mentor pre-fill (only once, after sessionId is ready)
-  useEffect(() => {
-    if (mentorParam && sessionId && !initDone.current) {
-      initDone.current = true;
-      sendMessage(`I'd like to be matched with ${mentorParam}. Can you help me understand if they're a good fit for me?`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mentorParam, sessionId]);
-
-  // Focus input
-  useEffect(() => {
-    if (mounted) {
-      setTimeout(() => inputRef.current?.focus(), 600);
-    }
-  }, [mounted]);
-
-  const sendMessage = async (query: string) => {
+  const sendMessage = useCallback(async (query: string) => {
     if (!query.trim() || loading) return;
 
     const updated: ChatMessage[] = [...messages, { role: 'user', content: query }];
@@ -108,13 +81,16 @@ function ChatPageContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'mcp-session-id': sessionIdRef.current,
+          'mcp-session-id': sessionId,
         },
         body: JSON.stringify({ query, topK: 6 }),
       });
 
       const data: AgentUiResponse = await res.json();
       setMessages([...updated, { role: 'assistant', content: data }]);
+      if (data.rankedMatches && data.rankedMatches.length > 0) {
+        setSelectedMatch(data.rankedMatches[0]);
+      }
     } catch {
       setMessages([
         ...updated,
@@ -128,7 +104,29 @@ function ChatPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, messages, sessionId]);
+
+  // Auto-scroll
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  // Handle mentor pre-fill (only once, after sessionId is ready)
+  useEffect(() => {
+    if (mentorParam && sessionId && !initDone.current) {
+      initDone.current = true;
+      const timer = setTimeout(() => {
+        sendMessage(`I'd like to be matched with ${mentorParam}. Can you help me understand if they're a good fit for me?`);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [mentorParam, sessionId, sendMessage]);
+
+  // Focus input
+  useEffect(() => {
+    const timer = setTimeout(() => inputRef.current?.focus(), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -148,9 +146,9 @@ function ChatPageContent() {
   };
 
   return (
-    <div className={`flex h-screen bg-surface/30 transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+    <div className="flex h-screen bg-surface/30 transition-opacity duration-500 opacity-100">
       {/* ── Sidebar ── */}
-      <aside className={`hidden lg:flex flex-col w-[280px] bg-white border-r border-border/60 p-6 transition-transform duration-500 delay-100 ${mounted ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className="hidden lg:flex flex-col w-[280px] bg-white border-r border-border/60 p-6 transition-transform duration-500 delay-100 translate-x-0">
         <Link href="/" className="flex items-center gap-2 mb-10">
           <Image src="/logo.png" alt="Elmentor" width={28} height={28} />
           <span className="text-[18px] font-bold text-navy-base">Elmentor</span>
@@ -195,7 +193,7 @@ function ChatPageContent() {
       </aside>
 
       {/* ── Chat Area ── */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-500 delay-200 opacity-100 translate-y-0">
         {/* Header */}
         <header className="shrink-0 h-[64px] bg-white border-b border-border/60 flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
@@ -221,7 +219,7 @@ function ChatPageContent() {
         <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin">
           <div className="max-w-[720px] mx-auto flex flex-col gap-5">
             {messages.length === 0 && !loading && (
-              <div className={`flex flex-col items-center justify-center text-center py-20 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <div className="flex flex-col items-center justify-center text-center py-20 transition-all duration-700 opacity-100 translate-y-0">
                 <div className="w-16 h-16 rounded-2xl bg-surface flex items-center justify-center text-teal mb-6">
                   <SparkleIcon size={32} />
                 </div>
@@ -260,10 +258,15 @@ function ChatPageContent() {
                   ) : (
                     <AgentBubble
                       data={msg.content as AgentUiResponse}
-                      onSendMessage={sendMessage}
                       formAnswers={formAnswers}
                       setFormAnswers={setFormAnswers}
                       onSubmitForm={submitForm}
+                      onSelectMatch={setSelectedMatch}
+                      selectedMatch={selectedMatch}
+                      onViewProfile={(mentorId: string) => {
+                        const found = (mentorsData as Mentor[]).find(m => m.id === mentorId || m.name === mentorId);
+                        if (found) setViewProfileMentor(found);
+                      }}
                     />
                   )}
                 </div>
@@ -285,7 +288,7 @@ function ChatPageContent() {
         </div>
 
         {/* Input */}
-        <div className={`shrink-0 bg-white border-t border-border/60 p-4 transition-all duration-500 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className="shrink-0 bg-white border-t border-border/60 p-4 transition-all duration-500 delay-300 opacity-100 translate-y-0">
           <div className="max-w-[720px] mx-auto relative">
             <textarea
               ref={inputRef}
@@ -309,6 +312,29 @@ function ChatPageContent() {
           </div>
         </div>
       </div>
+
+      {/* ── Right Validation Panel ── */}
+      <aside className="hidden xl:flex flex-col w-[360px] bg-white border-l border-border/60 transition-transform duration-500 delay-100 overflow-y-auto translate-x-0">
+        <div className="p-6 pb-4 border-b border-border/40">
+          <h2 className="text-[16px] font-bold text-navy-base mb-1">Compatibility Insights</h2>
+          <p className="text-[13px] text-text-muted">See how candidates align with your needs.</p>
+        </div>
+        
+        {!selectedMatch ? (
+          <div className="flex flex-col items-center justify-center text-center py-16 px-6 opacity-60">
+            <SparkleIcon size={24} className="text-teal mb-3" />
+            <p className="text-[13px] text-text-secondary">Mentor compatibility details will appear here once matches are found.</p>
+          </div>
+        ) : (
+          <RHSPanel selectedMatch={selectedMatch} />
+        )}
+      </aside>
+
+      {/* Mentor Detail Modal (from View Profile) */}
+      <MentorDetailModal
+        mentor={viewProfileMentor}
+        onClose={() => setViewProfileMentor(null)}
+      />
     </div>
   );
 }
@@ -369,16 +395,20 @@ function MarkdownText({ content }: { content: string }) {
 
 function AgentBubble({
   data,
-  onSendMessage,
   formAnswers,
   setFormAnswers,
   onSubmitForm,
+  onSelectMatch,
+  selectedMatch,
+  onViewProfile,
 }: {
   data: AgentUiResponse;
-  onSendMessage: (q: string) => void;
   formAnswers: Record<string, string>;
   setFormAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onSubmitForm: () => void;
+  onSelectMatch: (m: RankedMatch) => void;
+  selectedMatch: RankedMatch | null;
+  onViewProfile: (mentorId: string) => void;
 }) {
   // Safely extract text — handle cases where text might be object
   const textContent = useMemo(() => {
@@ -479,20 +509,12 @@ function AgentBubble({
       {data.rankedMatches && data.rankedMatches.length > 0 && (
         <div className="flex flex-col gap-3">
           {data.rankedMatches.map((match, i) => (
-            <MatchCard key={i} match={match} />
+            <MatchCard key={i} match={match} onSelect={() => onSelectMatch(match)} isSelected={selectedMatch?.mentorId === match.mentorId} onViewProfile={() => onViewProfile(match.mentorId)} />
           ))}
         </div>
       )}
 
-      {/* Match Evaluation */}
-      {data.matchEvaluation && (
-        <div className="bg-surface rounded-xl p-4 border border-border/40">
-          <p className="text-[13px] font-semibold text-navy-base mb-1">
-            Band: <span className="capitalize">{toStr(data.matchEvaluation.band)}</span>
-          </p>
-          <p className="text-[13px] text-text-secondary">{toStr(data.matchEvaluation.nextAction)}</p>
-        </div>
-      )}
+      {/* Match Evaluation — intentionally hidden from UI */}
 
       {/* Follow-up Questions */}
       {data.followUpQuestions && data.followUpQuestions.length > 0 && (
@@ -513,30 +535,17 @@ function AgentBubble({
 
 /* ─── Match Card ─────────────────────────────────────────────────────── */
 
-function MatchCard({ match }: { match: RankedMatch }) {
+function MatchCard({ match, onSelect, isSelected, onViewProfile }: { match: RankedMatch; onSelect: () => void; isSelected?: boolean; onViewProfile: () => void }) {
   const [rulesOpen, setRulesOpen] = useState(false);
 
-  const bandColors: Record<string, string> = {
-    excellent: 'text-green bg-green/10',
-    recommended: 'text-teal bg-teal/10',
-    pre_alignment: 'text-purple bg-purple/10',
-    rejected: 'text-text-muted bg-surface',
-  };
-
-  const bandClass = bandColors[match.band] || bandColors.recommended;
-
   // Determine display score (0-100)
-  const parseScore = (val: any) => {
+  const parseScore = (val: unknown) => {
     let n = Number(val);
     if (isNaN(n)) return 0;
-    // If the backend returns a decimal like 0.406, convert to percentage
     if (n > 0 && n <= 1.0) n = n * 100;
-    // If it's STILL tiny (e.g., 0.00406), convert again just in case
     if (n > 0 && n < 1.0) n = n * 100;
     return n;
   };
-
-  const rawScore = parseScore(match.score);
 
   // Fallback to mentorsData if name is missing or if name is actually a raw ID
   let displayName = toStr(match.name);
@@ -551,21 +560,48 @@ function MatchCard({ match }: { match: RankedMatch }) {
     }
   }
 
+  // Look up mentor photo
+  const mentorObj = (mentorsData as Mentor[]).find(m => m.id === match.mentorId || m.name === displayName);
+  const photo = mentorObj ? (MENTOR_PHOTOS[mentorObj.id] || '') : '';
+
+  // Overall score
+  const rawScore = Math.round(parseScore(match.score));
+
   return (
-    <div className="bg-surface rounded-xl p-4 border border-border/40 hover:shadow-card transition-shadow duration-200">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <p className="text-[15px] font-semibold text-navy-base">{displayName}</p>
-          <span className={`inline-block text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded mt-1 ${bandClass}`}>
-            {String(match.band).replace(/_/g, ' ')}
-          </span>
+    <div onClick={onSelect} className={`bg-surface rounded-xl p-4 border hover:shadow-card transition-all duration-200 cursor-pointer ${isSelected ? 'border-teal/50 ring-2 ring-teal/10' : 'border-border/40'}`}>
+      <div className="flex items-start gap-3 mb-3">
+        {photo && (
+          <Image
+            src={photo}
+            alt={displayName}
+            width={44}
+            height={44}
+            className="rounded-lg object-cover w-11 h-11 shrink-0"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-semibold text-navy-base truncate">{displayName}</p>
+          {mentorObj && (
+            <p className="text-[12px] text-text-muted capitalize truncate">{mentorObj.domain} · {mentorObj.years_experience} yrs</p>
+          )}
         </div>
-        <Link 
-          href="/mentors" 
-          className="shrink-0 text-[12px] font-semibold text-teal bg-teal/[0.08] hover:bg-teal/[0.15] border border-teal/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1"
-        >
-          View Profile
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          {rawScore > 0 && (
+            <span className={`text-[13px] font-bold px-2 py-0.5 rounded ${
+              rawScore >= 85 ? 'text-green bg-green/10' :
+              rawScore >= 70 ? 'text-teal bg-teal/10' :
+              rawScore >= 55 ? 'text-purple bg-purple/10' : 'text-text-muted bg-surface'
+            }`}>
+              {rawScore}%
+            </span>
+          )}
+          <button 
+            onClick={(e) => { e.stopPropagation(); onViewProfile(); }}
+            className="text-[12px] font-semibold text-teal bg-teal/[0.08] hover:bg-teal/[0.15] border border-teal/10 px-3 py-1.5 rounded-full transition-colors"
+          >
+            View Profile
+          </button>
+        </div>
       </div>
 
       {match.summary && (
@@ -594,11 +630,11 @@ function MatchCard({ match }: { match: RankedMatch }) {
         </div>
       )}
 
-      {/* Rule checks */}
+      {/* Rule checks (dropdown for small screens without R.H.S panel) */}
       {match.ruleChecks && match.ruleChecks.length > 0 && (
-        <div>
+        <div className="xl:hidden">
           <button
-            onClick={() => setRulesOpen(!rulesOpen)}
+            onClick={(e) => { e.stopPropagation(); setRulesOpen(!rulesOpen); }}
             className="flex items-center gap-1 text-[12px] font-medium text-text-muted hover:text-text-secondary transition-colors"
           >
             <ChevronDownIcon size={14} className={`transition-transform duration-200 ${rulesOpen ? 'rotate-180' : ''}`} />
@@ -611,18 +647,197 @@ function MatchCard({ match }: { match: RankedMatch }) {
                   <span className={r.passed ? 'text-green' : 'text-red'}>
                     {r.passed ? '\u2713' : '\u2717'}
                   </span>
-                  <span className="text-text-secondary">{toStr(r.rule)}</span>
-                  <span className={`text-[10px] font-bold uppercase ${
-                    r.severity === 'blocker' ? 'text-red' : r.severity === 'warning' ? 'text-[#F7B731]' : 'text-text-muted'
-                  }`}>
-                    {r.severity}
-                  </span>
+                  <span className="text-text-secondary">{toStr(r.title || r.rule)}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── R.H.S Panel ────────────────────────────────────────────────────── */
+
+function RHSPanel({ selectedMatch }: { selectedMatch: RankedMatch }) {
+  // Look up the full mentor from local data
+  const mentorObj = (mentorsData as Mentor[]).find(
+    m => m.id === selectedMatch.mentorId || m.name === (selectedMatch.name || selectedMatch.mentorName)
+  );
+  const photo = mentorObj ? (MENTOR_PHOTOS[mentorObj.id] || '') : '';
+
+  let displayName = toStr(selectedMatch.name) || toStr(selectedMatch.mentorName);
+  if ((!displayName || displayName === 'undefined' || displayName.includes('mentor_')) && mentorObj) {
+    displayName = mentorObj.name;
+  }
+
+  const parseScore = (val: unknown) => {
+    let n = Number(val);
+    if (isNaN(n)) return 0;
+    if (n > 0 && n <= 1.0) n = n * 100;
+    if (n > 0 && n < 1.0) n = n * 100;
+    return Math.round(n);
+  };
+
+  const overallScore = parseScore(selectedMatch.score);
+  const hardChecks = selectedMatch.ruleChecks?.filter((r) => r.isDeterministic) || [];
+  const qualitativeChecks = selectedMatch.ruleChecks?.filter((r) => !r.isDeterministic) || [];
+
+  return (
+    <div className="flex flex-col gap-0 animate-fade-up">
+      {/* Mentor Profile Header */}
+      <div className="p-6 border-b border-border/40">
+        <div className="flex items-center gap-3 mb-4">
+          {photo && (
+            <Image
+              src={photo}
+              alt={displayName}
+              width={56}
+              height={56}
+              className="rounded-xl object-cover w-14 h-14 shrink-0 border-2 border-border/40"
+            />
+          )}
+          <div className="min-w-0">
+            <p className="text-[16px] font-bold text-navy-base truncate">{displayName}</p>
+            {mentorObj && (
+              <p className="text-[13px] text-text-muted capitalize">{mentorObj.domain}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Score ring */}
+        {overallScore > 0 && (
+          <div className="flex items-center gap-3 bg-surface rounded-xl p-3">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[16px] font-bold border-[3px] ${
+              overallScore >= 85 ? 'border-green text-green' :
+              overallScore >= 70 ? 'border-teal text-teal' :
+              overallScore >= 55 ? 'border-purple text-purple' : 'border-border text-text-muted'
+            }`}>
+              {overallScore}
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-navy-base">Match Score</p>
+              <p className="text-[11px] text-text-muted">
+                {overallScore >= 85 ? 'Excellent fit' :
+                 overallScore >= 70 ? 'Recommended' :
+                 overallScore >= 55 ? 'Needs alignment' : 'Low compatibility'}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mentor Quick Stats */}
+      {mentorObj && (
+        <div className="p-6 border-b border-border/40">
+          <h3 className="text-[12px] font-bold text-text-muted uppercase tracking-wider mb-3">Mentor Profile</h3>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="bg-surface rounded-lg p-2.5 text-center">
+              <BriefcaseIcon size={14} className="text-teal mx-auto mb-1" />
+              <p className="text-[14px] font-bold text-navy-base">{mentorObj.years_experience}</p>
+              <p className="text-[10px] text-text-muted">Years</p>
+            </div>
+            <div className="bg-surface rounded-lg p-2.5 text-center">
+              <ClockIcon size={14} className="text-teal mx-auto mb-1" />
+              <p className="text-[12px] font-bold text-navy-base capitalize">{mentorObj.session_frequency}</p>
+              <p className="text-[10px] text-text-muted">Sessions</p>
+            </div>
+            <div className="bg-surface rounded-lg p-2.5 text-center">
+              <GlobeIcon size={14} className="text-teal mx-auto mb-1" />
+              <p className="text-[12px] font-bold text-navy-base">{mentorObj.languages.length}</p>
+              <p className="text-[10px] text-text-muted">Lang</p>
+            </div>
+          </div>
+
+          {/* Expertise */}
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold text-text-muted mb-1.5">Expertise</p>
+            <div className="flex flex-wrap gap-1">
+              {mentorObj.expertise_areas.map((a, i) => (
+                <span key={i} className="text-[11px] font-medium text-teal bg-teal/[0.06] border border-teal/10 px-2 py-0.5 rounded-full">{a}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Communication Style */}
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold text-text-muted mb-1.5">Communication Style</p>
+            <div className="flex flex-wrap gap-1">
+              {mentorObj.communication_style.map((s, i) => (
+                <span key={i} className="text-[11px] font-medium text-text-secondary bg-surface px-2 py-0.5 rounded-full capitalize">{s}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Personality */}
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold text-text-muted mb-1.5">Personality</p>
+            <div className="flex flex-wrap gap-1">
+              {mentorObj.personality_tags.map((t, i) => (
+                <span key={i} className="text-[11px] font-medium text-purple bg-purple/[0.06] border border-purple/10 px-2 py-0.5 rounded-full capitalize">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Languages */}
+          <div className="mb-3">
+            <p className="text-[11px] font-semibold text-text-muted mb-1.5">Languages</p>
+            <p className="text-[12px] text-text-secondary">{mentorObj.languages.join(', ')}</p>
+          </div>
+
+          {/* Availability */}
+          <div>
+            <p className="text-[11px] font-semibold text-text-muted mb-1.5">Available Windows</p>
+            <div className="flex flex-col gap-1">
+              {mentorObj.availability.map((slot, i) => (
+                <div key={i} className="text-[11px] text-text-secondary bg-surface rounded px-2 py-1">{slot}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hard Requirements */}
+      <div className="p-6 border-b border-border/40">
+        <h3 className="text-[12px] font-bold text-text-muted uppercase tracking-wider mb-3">Hard Requirements</h3>
+        <div className="flex flex-col gap-2.5">
+          {hardChecks.length > 0 ? hardChecks.map((r, i) => (
+            <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-surface border border-border/40">
+              <div className="flex items-center gap-2">
+                <span className={`text-[14px] ${r.passed ? 'text-green' : 'text-red'}`}>
+                  {r.passed ? '\u2713' : '\u2717'}
+                </span>
+                <span className="text-[13px] font-semibold text-navy-base">{toStr(r.title)}</span>
+              </div>
+              <p className="text-[12px] text-text-secondary pl-5 leading-relaxed">{toStr(r.reason)}</p>
+            </div>
+          )) : (
+            <p className="text-[12px] text-text-muted italic">Hard requirements will be evaluated once the agent runs deterministic checks.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Qualitative Assessment */}
+      <div className="p-6">
+        <h3 className="text-[12px] font-bold text-text-muted uppercase tracking-wider mb-3">Qualitative Assessment</h3>
+        <div className="flex flex-col gap-2.5">
+          {qualitativeChecks.length > 0 ? qualitativeChecks.map((r, i) => (
+            <div key={i} className="flex flex-col gap-1 p-3 rounded-lg bg-white border border-border/60 shadow-sm">
+              <div className="flex items-center gap-2">
+                <SparkleIcon size={14} className="text-teal shrink-0" />
+                <span className="text-[13px] font-semibold text-navy-base">{toStr(r.title)}</span>
+              </div>
+              <p className="text-[12px] text-text-secondary leading-relaxed pl-5">{toStr(r.reason)}</p>
+            </div>
+          )) : (
+            <div className="flex flex-col items-center text-center py-4 opacity-60">
+              <SparkleIcon size={18} className="text-teal mb-2" />
+              <p className="text-[12px] text-text-muted">Qualitative insights will appear when the agent evaluates subjective fit criteria like goal alignment, experience relevance, and communication style.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

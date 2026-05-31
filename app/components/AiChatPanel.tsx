@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { AgentUiResponse, ChatMessage, RankedMatch } from '../lib/types';
 import { CloseIcon, SendIcon, SparkleIcon, BrainIcon } from './icons';
 
@@ -22,37 +22,15 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [formAnswers, setFormAnswers] = useState<Record<string, any>>({});
+  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
   
-  const sessionId = useRef(Math.random().toString(36).slice(2, 10));
+  const reactId = useId();
+  const sessionId = reactId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'session';
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto scroll to bottom
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, loading]);
-
-  // Handle initial query
-  useEffect(() => {
-    if (isOpen && initialQuery && messages.length === 0) {
-      sendMessage(initialQuery);
-    }
-    // Only want to run this when opened fresh with a query
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialQuery]);
-
-  // Focus input on open
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-    }
-  }, [isOpen]);
-
-  const sendMessage = async (query: string) => {
-    if (!query.trim()) return;
+  const sendMessage = useCallback(async (query: string) => {
+    if (!query.trim() || loading) return;
     
     const newMessages: ChatMessage[] = [...messages, { role: 'user', content: query }];
     setMessages(newMessages);
@@ -64,7 +42,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'mcp-session-id': sessionId.current,
+          'mcp-session-id': sessionId,
         },
         body: JSON.stringify({ query, topK: 6 }),
       });
@@ -77,7 +55,6 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
       setMessages([...newMessages, { role: 'assistant', content: data }]);
     } catch (err) {
       console.error("Chat error:", err);
-      // Mock fallback or error gracefully
       setMessages([...newMessages, {
         role: 'assistant',
         content: { 
@@ -90,7 +67,31 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, messages, sessionId]);
+
+  // Auto scroll to bottom
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loading]);
+
+  // Handle initial query
+  useEffect(() => {
+    if (isOpen && initialQuery && messages.length === 0) {
+      const timer = setTimeout(() => {
+        sendMessage(initialQuery);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, initialQuery, messages.length, sendMessage]);
+
+  // Focus input on open
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [isOpen]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -163,7 +164,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
         {/* Session Strip */}
         <div className="bg-very-light-gray border-b border-light-gray py-[6px] px-[20px] flex items-center gap-[8px]">
           <span className="bg-teal-accent/10 text-teal-accent text-[10px] font-bold px-[6px] py-[2px] rounded-sm uppercase tracking-wider">
-            Session #{sessionId.current.substring(0,4)}
+            Session #{sessionId.substring(0,4)}
           </span>
           <span className="text-[12px] text-placeholder-gray flex items-center gap-[4px]">
             <span className="w-[4px] h-[4px] rounded-full bg-success-green block" />
@@ -190,7 +191,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
                     onClick={() => sendMessage(qs)}
                     className="text-left text-[13px] text-navy-base bg-off-white hover:bg-light-gray border border-light-gray rounded-sm px-[16px] py-[12px] transition-colors"
                   >
-                    "{qs}"
+                    &ldquo;{qs}&rdquo;
                   </button>
                 ))}
               </div>

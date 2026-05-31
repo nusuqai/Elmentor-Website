@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mentor, MENTOR_PHOTOS, DOMAIN_LABELS } from '../lib/types';
+import { Mentor, MENTOR_PHOTOS } from '../lib/types';
 import { CloseIcon, BriefcaseIcon, ClockIcon, GlobeIcon, ArrowRightIcon } from './icons';
 
 interface Props {
@@ -12,11 +12,7 @@ interface Props {
 }
 
 export default function MentorDetailModal({ mentor, onClose }: Props) {
-  const [tab, setTab] = useState('Overview');
-
-  useEffect(() => {
-    if (mentor) setTab('Overview');
-  }, [mentor]);
+  const [tabState, setTabState] = useState({ mentorId: '', tab: 'Overview' });
 
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -28,6 +24,7 @@ export default function MentorDetailModal({ mentor, onClose }: Props) {
 
   const photo = MENTOR_PHOTOS[mentor.id] || '';
   const tabs = ['Overview', 'Expertise', 'Schedule'];
+  const tab = tabState.mentorId === mentor.id ? tabState.tab : 'Overview';
 
   return (
     <div
@@ -86,7 +83,7 @@ export default function MentorDetailModal({ mentor, onClose }: Props) {
           {tabs.map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => setTabState({ mentorId: mentor.id, tab: t })}
               className={`pb-3 text-[14px] font-semibold transition-colors border-b-2 ${
                 tab === t
                   ? 'text-navy-base border-navy-base'

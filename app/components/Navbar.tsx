@@ -8,18 +8,15 @@ import { MenuIcon, CloseIcon, ArrowRightIcon } from './icons';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileState, setMobileState] = useState({ path: '', open: false });
   const pathname = usePathname();
+  const mobileOpen = mobileState.path === pathname && mobileState.open;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   const links = [
     { label: 'Mentors', href: '/mentors' },
@@ -83,7 +80,7 @@ export default function Navbar() {
           {/* Mobile Toggle */}
           <button
             className="md:hidden text-navy-base p-2"
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => setMobileState({ path: pathname, open: !mobileOpen })}
             aria-label="Toggle menu"
           >
             {mobileOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
@@ -94,14 +91,14 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setMobileState({ path: pathname, open: false })} />
           <div className="absolute top-[64px] left-0 right-0 bg-white shadow-elevated p-6 flex flex-col gap-4 animate-fade-up">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className="text-[16px] font-medium text-navy-base py-2 border-b border-border/50"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => setMobileState({ path: pathname, open: false })}
               >
                 {link.label}
               </Link>
@@ -109,7 +106,7 @@ export default function Navbar() {
             <Link
               href="/chat"
               className="inline-flex items-center justify-center gap-2 bg-navy-base text-white text-[15px] font-semibold px-6 py-3 rounded-full mt-2"
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileState({ path: pathname, open: false })}
             >
               Get Matched
               <ArrowRightIcon size={16} />

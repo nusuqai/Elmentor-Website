@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import MentorDetailModal from '../components/MentorDetailModal';
-import { BriefcaseIcon, ClockIcon, GlobeIcon, ArrowRightIcon } from '../components/icons';
+import { BriefcaseIcon, ClockIcon, GlobeIcon } from '../components/icons';
 import { Mentor, MENTOR_PHOTOS, DOMAIN_LABELS } from '../lib/types';
 import mentorsData from '../data/mentors/en';
 
@@ -64,20 +64,20 @@ function availMatch(mentor: Mentor, filter: string): boolean {
 function MentorsContent() {
   const searchParams = useSearchParams();
   const domainParam = searchParams.get('domain');
+  const urlDomainFilter = domainParam && DOMAIN_FILTERS.includes(domainParam) ? domainParam : null;
 
-  const [activeFilter, setActiveFilter] = useState(domainParam || 'All');
-  const [experience, setExperience] = useState('any');
-  const [language, setLanguage] = useState('any');
-  const [availability, setAvailability] = useState('any');
+  const [manualDomainFilter, setManualDomainFilter] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    experience: 'any',
+    language: 'any',
+    availability: 'any',
+    currentPage: 1,
+  });
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [animating, setAnimating] = useState(false);
-
-  // Apply URL params on mount
-  useEffect(() => {
-    if (domainParam && DOMAIN_FILTERS.includes(domainParam)) {
-      setActiveFilter(domainParam);
-    }
-  }, [domainParam]);
+  const itemsPerPage = 9;
+  const activeFilter = manualDomainFilter ?? urlDomainFilter ?? 'All';
+  const { experience, language, availability, currentPage } = filters;
 
   const allMentors = mentorsData as Mentor[];
   const filtered = allMentors.filter(m =>
@@ -87,13 +87,30 @@ function MentorsContent() {
     availMatch(m, availability)
   );
 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const currentMentors = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const handleDomainFilter = (f: string) => {
     if (f === activeFilter) return;
     setAnimating(true);
     setTimeout(() => {
-      setActiveFilter(f);
+      setManualDomainFilter(f);
+      setFilters(prev => ({ ...prev, currentPage: 1 }));
       setAnimating(false);
     }, 150);
+  };
+
+  const updateFilter = (name: 'experience' | 'language' | 'availability', value: string) => {
+    setFilters(prev => ({ ...prev, [name]: value, currentPage: 1 }));
+  };
+
+  const clearSecondaryFilters = () => {
+    setFilters(prev => ({ ...prev, experience: 'any', language: 'any', availability: 'any', currentPage: 1 }));
+  };
+
+  const clearAllFilters = () => {
+    setManualDomainFilter('All');
+    setFilters({ experience: 'any', language: 'any', availability: 'any', currentPage: 1 });
   };
 
   const activeFiltersCount = [experience, language, availability].filter(v => v !== 'any').length;
@@ -133,7 +150,7 @@ function MentorsContent() {
             <div className="flex flex-wrap gap-3 pb-4">
               <select
                 value={experience}
-                onChange={(e) => setExperience(e.target.value)}
+                onChange={(e) => updateFilter('experience', e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
                 {EXPERIENCE_FILTERS.map(o => (
@@ -143,7 +160,7 @@ function MentorsContent() {
 
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                onChange={(e) => updateFilter('language', e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
                 {LANGUAGE_FILTERS.map(o => (
@@ -153,7 +170,7 @@ function MentorsContent() {
 
               <select
                 value={availability}
-                onChange={(e) => setAvailability(e.target.value)}
+                onChange={(e) => updateFilter('availability', e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
                 {AVAILABILITY_FILTERS.map(o => (
@@ -163,7 +180,7 @@ function MentorsContent() {
 
               {activeFiltersCount > 0 && (
                 <button
-                  onClick={() => { setExperience('any'); setLanguage('any'); setAvailability('any'); }}
+                  onClick={clearSecondaryFilters}
                   className="text-[13px] font-medium text-teal hover:text-navy-base transition-colors px-2"
                 >
                   Clear filters ({activeFiltersCount})
@@ -180,7 +197,7 @@ function MentorsContent() {
         {/* Grid */}
         <section className="px-6 lg:px-10 py-8">
           <div className={`max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-150 ${animating ? 'opacity-0' : 'opacity-100'}`}>
-            {filtered.map((mentor) => {
+            {currentMentors.map((mentor) => {
               const photo = MENTOR_PHOTOS[mentor.id] || '';
               return (
                 <div
@@ -272,11 +289,45 @@ function MentorsContent() {
             })}
           </div>
 
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-12">
+              <button
+                onClick={() => { setFilters(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={currentPage === 1}
+                className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-navy-base hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                &larr;
+              </button>
+              
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setFilters(prev => ({ ...prev, currentPage: i + 1 })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`w-10 h-10 flex items-center justify-center rounded-lg text-[14px] font-semibold transition-colors ${
+                    currentPage === i + 1
+                      ? 'bg-navy-base text-white'
+                      : 'border border-border text-navy-base hover:bg-surface'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => { setFilters(prev => ({ ...prev, currentPage: Math.min(totalPages, prev.currentPage + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-navy-base hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                &rarr;
+              </button>
+            </div>
+          )}
+
           {filtered.length === 0 && (
             <div className="max-w-[1280px] mx-auto text-center py-20">
               <p className="text-[16px] text-text-muted mb-4">No mentors match your current filters.</p>
               <button
-                onClick={() => { setActiveFilter('All'); setExperience('any'); setLanguage('any'); setAvailability('any'); }}
+                onClick={clearAllFilters}
                 className="text-[14px] font-semibold text-teal hover:text-navy-base transition-colors cursor-pointer"
               >
                 Clear all filters

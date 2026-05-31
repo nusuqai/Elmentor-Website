@@ -1,5 +1,5 @@
 import React from 'react';
-import { UsersIcon, ShieldCheckIcon, MessageCircleIcon, TrendingUpIcon } from './icons';
+import { ShieldCheckIcon, MessageCircleIcon, TrendingUpIcon } from './icons';
 
 export default function ValueProps() {
   const values = [

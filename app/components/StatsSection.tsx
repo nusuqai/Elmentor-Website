@@ -7,7 +7,7 @@ export default function StatsSection() {
   const ref = useRef<HTMLDivElement>(null);
 
   const stats = [
-    { value: 10, suffix: '+', label: 'Expert Mentors' },
+    { value: 30, suffix: '+', label: 'Expert Mentors' },
     { value: 8, suffix: '+', label: 'Career Domains' },
     { value: 95, suffix: '%', label: 'Match Satisfaction' },
     { value: 500, suffix: '+', label: 'Sessions Completed' },
