@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { translations } from '../data/translations';
 
-export default function StatsSection() {
+export default function StatsSection({ lang = 'en' }: { lang?: string }) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const t = translations[lang as 'en' | 'ar'];
 
   const stats = [
-    { value: 30, suffix: '+', label: 'Expert Mentors' },
-    { value: 8, suffix: '+', label: 'Career Domains' },
-    { value: 95, suffix: '%', label: 'Match Satisfaction' },
-    { value: 500, suffix: '+', label: 'Sessions Completed' },
+    { value: 10, suffix: '+', label: t.stats.expertMentors },
+    { value: 8, suffix: '+', label: t.stats.careerDomains },
+    { value: 95, suffix: '%', label: t.stats.matchSatisfaction },
+    { value: 500, suffix: '+', label: t.stats.sessionsCompleted },
   ];
 
   useEffect(() => {
@@ -32,7 +34,9 @@ export default function StatsSection() {
         <div className="absolute bottom-0 right-[10%] w-[300px] h-[300px] rounded-full bg-purple/20 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className={`relative z-10 max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 ${
+        lang === 'ar' ? 'flex-row-reverse' : ''
+      }`}>
         {stats.map((stat, i) => (
           <div key={i} className="text-center">
             <div className="text-[48px] md:text-[56px] font-bold text-white leading-none mb-2">

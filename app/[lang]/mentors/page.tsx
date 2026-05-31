@@ -1,44 +1,57 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import MentorDetailModal from '../components/MentorDetailModal';
-import { BriefcaseIcon, ClockIcon, GlobeIcon } from '../components/icons';
-import { Mentor, MENTOR_PHOTOS, DOMAIN_LABELS } from '../lib/types';
-import mentorsData from '../data/mentors/en';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
+import MentorDetailModal from '../../components/MentorDetailModal';
+import { BriefcaseIcon, ClockIcon, GlobeIcon } from '../../components/icons';
+import { Mentor, MENTOR_PHOTOS } from '../../lib/types';
+import { mentorsEn, mentorsAr } from '../../data/mentors';
+import { translations } from '../../data/translations';
 
 const DOMAIN_FILTERS = [
   'All', 'Product', 'Engineering', 'Design', 'Marketing', 'Data',
   'HR', 'Cybersecurity', 'Sales', 'Finance', 'Operations',
 ];
 
-const EXPERIENCE_FILTERS = [
-  { label: 'Any experience', value: 'any' },
-  { label: '1-4 years', value: 'junior' },
-  { label: '5-8 years', value: 'mid' },
-  { label: '9+ years', value: 'senior' },
-];
-
-const LANGUAGE_FILTERS = [
-  { label: 'Any language', value: 'any' },
-  { label: 'English', value: 'English' },
-  { label: 'Arabic', value: 'Arabic' },
-];
-
-const AVAILABILITY_FILTERS = [
-  { label: 'All statuses', value: 'any' },
-  { label: 'Available', value: 'available' },
-  { label: 'Full', value: 'full' },
-];
+const DOMAIN_LABELS_AR: Record<string, string> = {
+  'all': 'الكل',
+  'product': 'المنتجات',
+  'engineering': 'الهندسة',
+  'design': 'التصميم',
+  'marketing': 'التسويق',
+  'data': 'البيانات',
+  'hr': 'الموارد البشرية',
+  'cybersecurity': 'الأمن الرقمي',
+  'sales': 'المبيعات',
+  'finance': 'المالية',
+  'operations': 'العمليات',
+};
 
 function domainMatch(mentor: Mentor, filter: string): boolean {
   if (filter === 'All') return true;
-  const domainLabel = DOMAIN_LABELS[mentor.domain.toLowerCase()] || mentor.domain;
-  return domainLabel.toLowerCase() === filter.toLowerCase();
+  
+  const mentorDomain = mentor.domain.toLowerCase();
+  
+  const matchers: Record<string, string[]> = {
+    'Product': ['product management', 'إدارة المنتجات'],
+    'Engineering': ['software engineering', 'الهندسة البرمجية', 'الهندسة'],
+    'Design': ['ux design', 'تصميم تجربة المستخدم', 'التصميم'],
+    'Marketing': ['growth marketing', 'التسويق والنمو', 'التسويق'],
+    'Data': ['data analytics', 'تحليل البيانات', 'البيانات'],
+    'HR': ['human resources', 'الموارد البشرية'],
+    'Cybersecurity': ['cybersecurity', 'الأمن السيبراني', 'أمن المعلومات'],
+    'Sales': ['sales enablement', 'تمكين المبيعات', 'المبيعات'],
+    'Finance': ['finance and fp&a', 'التمويل والتخطيط والتحليل المالي', 'المالية'],
+    'Operations': ['operations', 'العمليات']
+  };
+  
+  const allowed = matchers[filter];
+  if (!allowed) return true;
+  return allowed.some(a => mentorDomain.includes(a) || a.includes(mentorDomain));
 }
 
 function expMatch(mentor: Mentor, filter: string): boolean {
@@ -51,7 +64,12 @@ function expMatch(mentor: Mentor, filter: string): boolean {
 
 function langMatch(mentor: Mentor, filter: string): boolean {
   if (filter === 'any') return true;
-  return mentor.languages.some(l => l.toLowerCase() === filter.toLowerCase());
+  const targetLang = filter === 'Arabic' || filter === 'العربية' ? 'arabic' : 'english';
+  return mentor.languages.some(l => {
+    const lower = l.toLowerCase();
+    if (targetLang === 'arabic') return lower === 'arabic' || lower === 'العربية';
+    return lower === 'english' || lower === 'الإنجليزية';
+  });
 }
 
 function availMatch(mentor: Mentor, filter: string): boolean {
@@ -61,24 +79,30 @@ function availMatch(mentor: Mentor, filter: string): boolean {
   return true;
 }
 
-function MentorsContent() {
+function MentorsContent({ lang }: { lang: 'en' | 'ar' }) {
   const searchParams = useSearchParams();
   const domainParam = searchParams.get('domain');
-  const urlDomainFilter = domainParam && DOMAIN_FILTERS.includes(domainParam) ? domainParam : null;
+  const t = translations[lang];
 
-  const [manualDomainFilter, setManualDomainFilter] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    experience: 'any',
-    language: 'any',
-    availability: 'any',
-    currentPage: 1,
-  });
+  const initialFilter = domainParam && DOMAIN_FILTERS.some(d => d.toLowerCase() === domainParam.toLowerCase())
+    ? DOMAIN_FILTERS.find(d => d.toLowerCase() === domainParam.toLowerCase()) || 'All'
+    : 'All';
+
+  const [activeFilter, setActiveFilter] = useState(initialFilter);
+  const [experience, setExperience] = useState('any');
+  const [language, setLanguage] = useState('any');
+  const [availability, setAvailability] = useState('any');
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [animating, setAnimating] = useState(false);
-  const itemsPerPage = 9;
-  const activeFilter = manualDomainFilter ?? urlDomainFilter ?? 'All';
-  const { experience, language, availability, currentPage } = filters;
 
+  useEffect(() => {
+    if (domainParam) {
+      const match = DOMAIN_FILTERS.find(d => d.toLowerCase() === domainParam.toLowerCase());
+      if (match) setActiveFilter(match);
+    }
+  }, [domainParam]);
+
+  const mentorsData = lang === 'ar' ? mentorsAr : mentorsEn;
   const allMentors = mentorsData as Mentor[];
   const filtered = allMentors.filter(m =>
     domainMatch(m, activeFilter) &&
@@ -87,30 +111,13 @@ function MentorsContent() {
     availMatch(m, availability)
   );
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const currentMentors = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
   const handleDomainFilter = (f: string) => {
     if (f === activeFilter) return;
     setAnimating(true);
     setTimeout(() => {
-      setManualDomainFilter(f);
-      setFilters(prev => ({ ...prev, currentPage: 1 }));
+      setActiveFilter(f);
       setAnimating(false);
     }, 150);
-  };
-
-  const updateFilter = (name: 'experience' | 'language' | 'availability', value: string) => {
-    setFilters(prev => ({ ...prev, [name]: value, currentPage: 1 }));
-  };
-
-  const clearSecondaryFilters = () => {
-    setFilters(prev => ({ ...prev, experience: 'any', language: 'any', availability: 'any', currentPage: 1 }));
-  };
-
-  const clearAllFilters = () => {
-    setManualDomainFilter('All');
-    setFilters({ experience: 'any', language: 'any', availability: 'any', currentPage: 1 });
   };
 
   const activeFiltersCount = [experience, language, availability].filter(v => v !== 'any').length;
@@ -123,72 +130,75 @@ function MentorsContent() {
         <section className="px-6 lg:px-10 pt-12 pb-4 gradient-mesh">
           <div className="max-w-[1280px] mx-auto">
             <h1 className="text-[36px] md:text-[48px] font-bold tracking-tight text-navy-base mb-3">
-              Browse Mentors
+              {t.mentorsPage.title}
             </h1>
             <p className="text-[17px] text-text-secondary max-w-[520px] mb-8">
-              Explore our community of experienced professionals across multiple domains. Find someone who aligns with your career goals.
+              {t.mentorsPage.subtitle}
             </p>
 
             {/* Domain Tabs */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin mb-4">
-              {DOMAIN_FILTERS.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => handleDomainFilter(f)}
-                  className={`shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 cursor-pointer ${
-                    activeFilter === f
-                      ? 'bg-navy-base text-white shadow-sm'
-                      : 'bg-white text-text-secondary border border-border hover:border-navy-base/20 hover:text-navy-base'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
+              {DOMAIN_FILTERS.map((f) => {
+                const label = lang === 'ar' ? (DOMAIN_LABELS_AR[f.toLowerCase()] || f) : f;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => handleDomainFilter(f)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 cursor-pointer ${
+                      activeFilter === f
+                        ? 'bg-navy-base text-white shadow-sm'
+                        : 'bg-white text-text-secondary border border-border hover:border-navy-base/20 hover:text-navy-base'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Additional Filters Row */}
             <div className="flex flex-wrap gap-3 pb-4">
               <select
                 value={experience}
-                onChange={(e) => updateFilter('experience', e.target.value)}
+                onChange={(e) => setExperience(e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
-                {EXPERIENCE_FILTERS.map(o => (
+                {t.mentorsPage.experienceFilters.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
 
               <select
                 value={language}
-                onChange={(e) => updateFilter('language', e.target.value)}
+                onChange={(e) => setLanguage(e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
-                {LANGUAGE_FILTERS.map(o => (
+                {t.mentorsPage.languageFilters.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
 
               <select
                 value={availability}
-                onChange={(e) => updateFilter('availability', e.target.value)}
+                onChange={(e) => setAvailability(e.target.value)}
                 className="bg-white border border-border rounded-lg px-3 py-2 text-[13px] font-medium text-navy-base focus:outline-none focus:border-teal cursor-pointer"
               >
-                {AVAILABILITY_FILTERS.map(o => (
+                {t.mentorsPage.availabilityFilters.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
 
               {activeFiltersCount > 0 && (
                 <button
-                  onClick={clearSecondaryFilters}
+                  onClick={() => { setExperience('any'); setLanguage('any'); setAvailability('any'); }}
                   className="text-[13px] font-medium text-teal hover:text-navy-base transition-colors px-2"
                 >
-                  Clear filters ({activeFiltersCount})
+                  {t.mentorsPage.clearFilters} ({activeFiltersCount})
                 </button>
               )}
 
-              <span className="text-[13px] text-text-muted self-center ml-auto">
-                {filtered.length} mentor{filtered.length !== 1 ? 's' : ''} found
+              <span className={`text-[13px] text-text-muted self-center ${lang === 'ar' ? 'mr-auto' : 'ml-auto'}`}>
+                {filtered.length} {filtered.length === 1 ? t.mentorsPage.foundCount : t.mentorsPage.foundCountPlural}
               </span>
             </div>
           </div>
@@ -197,7 +207,7 @@ function MentorsContent() {
         {/* Grid */}
         <section className="px-6 lg:px-10 py-8">
           <div className={`max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-150 ${animating ? 'opacity-0' : 'opacity-100'}`}>
-            {currentMentors.map((mentor) => {
+            {filtered.map((mentor) => {
               const photo = MENTOR_PHOTOS[mentor.id] || '';
               return (
                 <div
@@ -214,8 +224,8 @@ function MentorsContent() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                      <div>
+                    <div className={`absolute bottom-4 ${lang === 'ar' ? 'left-4 right-4 flex-row-reverse' : 'left-4 right-4'} flex items-end justify-between`}>
+                      <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
                         <h3 className="text-[18px] font-semibold text-white leading-tight drop-shadow-sm">
                           {mentor.name}
                         </h3>
@@ -224,12 +234,12 @@ function MentorsContent() {
                       {mentor.current_mentees < 3 ? (
                         <span className="flex items-center gap-1.5 glass px-2.5 py-1 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-green" />
-                          <span className="text-[11px] font-semibold text-navy-base">Available</span>
+                          <span className="text-[11px] font-semibold text-navy-base">{t.mentorsPage.available}</span>
                         </span>
                       ) : (
                         <span className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-red" />
-                          <span className="text-[11px] font-semibold text-text-secondary">Full</span>
+                          <span className="text-[11px] font-semibold text-text-secondary">{t.mentorsPage.full}</span>
                         </span>
                       )}
                     </div>
@@ -237,10 +247,10 @@ function MentorsContent() {
 
                   {/* Body */}
                   <div className="p-5 flex flex-col flex-1">
-                    <div className="flex items-center gap-5 text-[13px] text-text-secondary mb-4">
+                    <div className="flex items-center gap-5 text-[13px] text-text-secondary mb-4 flex-wrap">
                       <span className="flex items-center gap-1.5">
                         <BriefcaseIcon size={14} className="text-text-muted" />
-                        {mentor.years_experience} years
+                        {mentor.years_experience} {lang === 'ar' ? 'سنوات' : 'years'}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <ClockIcon size={14} className="text-text-muted" />
@@ -260,7 +270,7 @@ function MentorsContent() {
                       ))}
                       {mentor.expertise_areas.length > 3 && (
                         <span className="text-[11px] font-medium text-text-muted px-2 py-1">
-                          +{mentor.expertise_areas.length - 3} more
+                          +{mentor.expertise_areas.length - 3} {lang === 'ar' ? 'أخرى' : 'more'}
                         </span>
                       )}
                     </div>
@@ -274,13 +284,13 @@ function MentorsContent() {
                         onClick={() => setSelectedMentor(mentor)}
                         className="flex-1 text-center text-[13px] font-semibold text-navy-base border border-border rounded-lg py-2.5 hover:bg-surface transition-colors cursor-pointer"
                       >
-                        View Profile
+                        {t.mentorsPage.viewProfile}
                       </button>
                       <Link
-                        href={`/chat?mentor=${encodeURIComponent(mentor.name)}`}
+                        href={`/${lang}/chat?mentor=${encodeURIComponent(mentor.name)}`}
                         className="flex-1 text-center text-[13px] font-semibold text-white bg-navy-base rounded-lg py-2.5 hover:bg-deep-navy transition-colors"
                       >
-                        Get Matched
+                        {t.mentorsPage.getMatched}
                       </Link>
                     </div>
                   </div>
@@ -289,71 +299,40 @@ function MentorsContent() {
             })}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-12">
-              <button
-                onClick={() => { setFilters(prev => ({ ...prev, currentPage: Math.max(1, prev.currentPage - 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                disabled={currentPage === 1}
-                className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-navy-base hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                &larr;
-              </button>
-              
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setFilters(prev => ({ ...prev, currentPage: i + 1 })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className={`w-10 h-10 flex items-center justify-center rounded-lg text-[14px] font-semibold transition-colors ${
-                    currentPage === i + 1
-                      ? 'bg-navy-base text-white'
-                      : 'border border-border text-navy-base hover:bg-surface'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                onClick={() => { setFilters(prev => ({ ...prev, currentPage: Math.min(totalPages, prev.currentPage + 1) })); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                disabled={currentPage === totalPages}
-                className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-navy-base hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                &rarr;
-              </button>
-            </div>
-          )}
-
           {filtered.length === 0 && (
             <div className="max-w-[1280px] mx-auto text-center py-20">
-              <p className="text-[16px] text-text-muted mb-4">No mentors match your current filters.</p>
+              <p className="text-[16px] text-text-muted mb-4">{t.mentorsPage.noMentors}</p>
               <button
-                onClick={clearAllFilters}
+                onClick={() => { setActiveFilter('All'); setExperience('any'); setLanguage('any'); setAvailability('any'); }}
                 className="text-[14px] font-semibold text-teal hover:text-navy-base transition-colors cursor-pointer"
               >
-                Clear all filters
+                {t.mentorsPage.clearAllFilters}
               </button>
             </div>
           )}
         </section>
       </main>
-      <Footer />
+      <Footer lang={lang} />
 
       <MentorDetailModal
         mentor={selectedMentor}
         onClose={() => setSelectedMentor(null)}
+        lang={lang}
       />
     </>
   );
 }
 
-export default function MentorsPage() {
+export default function MentorsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = use(params) as { lang: 'en' | 'ar' };
+  
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="dot-pulse"><span /><span /><span /></div>
       </div>
     }>
-      <MentorsContent />
+      <MentorsContent lang={lang} />
     </Suspense>
   );
 }
