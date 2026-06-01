@@ -15,6 +15,7 @@ export interface Mentor {
   fit_notes: string[];
   is_demo: boolean;
   photo?: string;
+  sex: "male" | "female";
 }
 
 export type MessageRole = "user" | "assistant";
@@ -141,36 +142,8 @@ export interface AgentUiResponse {
 /* ─── Static Data ────────────────────────────────────────────────────── */
 
 export const MENTOR_PHOTOS: Record<string, string> = {
-  mentor_001: "/mentors/maya.jpg",
-  mentor_002: "/mentors/omar.jpg",
-  mentor_003: "/mentors/nour.jpg",
-  mentor_004: "/mentors/lina.jpg",
-  mentor_005: "/mentors/hassan.jpg",
-  mentor_006: "/mentors/sara.jpg",
-  mentor_007: "/mentors/karim.jpg",
-  mentor_008: "/mentors/dalia.jpg",
-  mentor_009: "/mentors/yara.jpg",
-  mentor_010: "/mentors/tarek.jpg",
-  mentor_011: "/mentors/maya.jpg",
-  mentor_012: "/mentors/omar.jpg",
-  mentor_013: "/mentors/nour.jpg",
-  mentor_014: "/mentors/lina.jpg",
-  mentor_015: "/mentors/hassan.jpg",
-  mentor_016: "/mentors/sara.jpg",
-  mentor_017: "/mentors/karim.jpg",
-  mentor_018: "/mentors/dalia.jpg",
-  mentor_019: "/mentors/yara.jpg",
-  mentor_020: "/mentors/tarek.jpg",
-  mentor_021: "/mentors/maya.jpg",
-  mentor_022: "/mentors/omar.jpg",
-  mentor_023: "/mentors/nour.jpg",
-  mentor_024: "/mentors/lina.jpg",
-  mentor_025: "/mentors/hassan.jpg",
-  mentor_026: "/mentors/sara.jpg",
-  mentor_027: "/mentors/karim.jpg",
-  mentor_028: "/mentors/dalia.jpg",
-  mentor_029: "/mentors/yara.jpg",
-  mentor_030: "/mentors/tarek.jpg",
+  male: "/mentors/male_placeholder.png",
+  female: "/mentors/female_placeholder.png",
 };
 
 export const DOMAIN_LABELS: Record<string, string> = {

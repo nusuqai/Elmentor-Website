@@ -1,6 +1,6 @@
-import { mentorsEn } from "../../data/mentors";
+import { Mentor as LibMentor } from "../../lib/types";
 
-export type Mentor = (typeof mentorsEn)[number];
+export type Mentor = LibMentor;
 
 export type Question = {
   id?: string;

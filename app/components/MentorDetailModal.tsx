@@ -28,9 +28,20 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
     return () => window.removeEventListener('keydown', onEsc);
   }, [onClose]);
 
+  useEffect(() => {
+    if (mentor) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mentor]);
+
   if (!mentor) return null;
 
-  const photo = MENTOR_PHOTOS[mentor.id] || '';
+  const photo = MENTOR_PHOTOS[mentor.sex] || '';
   const tabs = isAr ? ['نظرة عامة', 'الخبرات', 'الجدول والاتصال'] : ['Overview', 'Expertise', 'Schedule'];
 
   return (

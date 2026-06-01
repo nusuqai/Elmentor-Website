@@ -52,7 +52,7 @@ export default async function RootLayout({ children, params }: Props) {
   const fontVariable = lang === 'ar' ? cairo.variable : inter.variable;
 
   return (
-    <html lang={lang} dir={dir} className={fontVariable}>
+    <html lang={lang} dir={dir} className={fontVariable} data-scroll-behavior="smooth">
       <body className={`${fontClass} antialiased`}>{children}</body>
     </html>
   );

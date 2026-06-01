@@ -28,7 +28,6 @@ import type {
   QuestionSpec,
   QuestionOption,
 } from "../../lib/types";
-import { mentorsEn, mentorsAr } from "../../data/mentors";
 import { translations } from "../../data/translations";
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
@@ -643,11 +642,19 @@ function MatchCard({ match, lang }: { match: RankedMatch; lang: "en" | "ar" }) {
     displayName === "undefined" ||
     displayName.includes("mentor_")
   ) {
-    const mentorsData = lang === "ar" ? mentorsAr : mentorsEn;
-    const foundMentor = (mentorsData as Mentor[]).find((m) =>
-      searchId.includes(m.id),
-    );
-    displayName = foundMentor?.name || searchId || "Unknown Mentor";
+    const fallbacks: Record<string, string> = {
+      mentor_001: lang === "ar" ? "مايا السيد" : "Maya El-Sayed",
+      mentor_002: lang === "ar" ? "عمر خالد" : "Omar Khaled",
+      mentor_003: lang === "ar" ? "نور حسن" : "Nour Hassan",
+      mentor_004: lang === "ar" ? "لينا فوزي" : "Lina Fawzy",
+      mentor_005: lang === "ar" ? "حسن عادل" : "Hassan Adel",
+      mentor_006: lang === "ar" ? "سارة محمود" : "Sara Mahmoud",
+      mentor_007: lang === "ar" ? "كريم يوسف" : "Karim Youssef",
+      mentor_008: lang === "ar" ? "داليا ناصر" : "Dalia Nasser",
+      mentor_009: lang === "ar" ? "يارا أمين" : "Yara Amin",
+      mentor_010: lang === "ar" ? "طارق سالم" : "Tarek Salem"
+    };
+    displayName = fallbacks[searchId] || searchId || "Unknown Mentor";
   }
 
   const subscores = match.subscores || {};
