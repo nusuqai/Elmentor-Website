@@ -22,72 +22,123 @@ export type MessageRole = "user" | "assistant";
 export interface ChatMessage {
   role: MessageRole;
   content: string | AgentUiResponse;
+  /** Present on user messages that were submitted as question-plan answers */
+  questionPlanAnswers?: Array<{ label: string; answer: string }>;
+}
+
+/* ─── Question Schema ─────────────────────────────────────────────────── */
+
+export type QuestionType =
+  | "free_text"
+  | "single_select"
+  | "multi_select"
+  | "date"
+  | "date_range"
+  | "number"
+  | "range"
+  | "boolean";
+
+export interface QuestionOption {
+  label: string;
+  value: string;
+  description: string | null;
+}
+
+export interface QuestionSpec {
+  id: string;
+  type: QuestionType;
+  label: string;
+  description: string | null;
+  required: boolean;
+  dependsOn: string[] | null;
+  placeholder: string | null;
+  multiline: boolean | null;
+  options: QuestionOption[] | null;
+  allowOther: boolean | null;
+  minSelections: number | null;
+  maxSelections: number | null;
+  minDate: string | null;
+  maxDate: string | null;
+  minValue: number | null;
+  maxValue: number | null;
+  step: number | null;
+  unit: string | null;
+  leftLabel: string | null;
+  rightLabel: string | null;
+  trueLabel: string | null;
+  falseLabel: string | null;
 }
 
 export interface QuestionPlan {
   title: string;
-  questions: Array<{
-    id: string;
-    type:
-      | "free_text"
-      | "single_select"
-      | "multi_select"
-      | "number"
-      | "range"
-      | "boolean"
-      | "date_range";
-    label: string;
-    options?: string[];
-    unit?: string;
-    min?: number;
-    max?: number;
-  }>;
+  reason: string;
+  questions: QuestionSpec[];
+}
+
+/* ─── Ranked Matches ──────────────────────────────────────────────────── */
+
+export interface MatchSubscores {
+  domainAlignment: number;
+  goalCompatibility: number;
+  availability: number;
+  communicationStyle: number;
+  personalityFit: number;
+}
+
+export interface RuleCheck {
+  ruleId?: string;
+  title: string;
+  reason: string;
+  passed: boolean;
+  isDeterministic?: boolean;
+  severity: "blocker" | "warning" | "info";
 }
 
 export interface RankedMatch {
   mentorId: string;
-  name: string;
-  mentorName?: string;
+  /** Primary display name — from schema */
+  mentorName: string;
+  /** Legacy fallback — some responses still send `name` */
+  name?: string;
   band: "excellent" | "recommended" | "pre_alignment" | "rejected";
   score: number;
   summary: string;
-  subscores: {
-    domain: number;
-    goal: number;
-    availability: number;
-    communication: number;
-    fit: number;
-  };
-  ruleChecks: Array<{
-    rule: string;
-    title?: string;
-    reason?: string;
-    passed: boolean;
-    isDeterministic?: boolean;
-    severity: "blocker" | "warning" | "info";
-  }>;
+  subscores: MatchSubscores;
+  ruleChecks: RuleCheck[];
+  nextAction?: "approve" | "trial_session" | "pre_alignment_session" | "reject";
 }
 
 export interface MatchEvaluation {
+  eligible?: boolean;
   band: string;
   nextAction: string;
-  trialRequired: boolean;
+  score?: number | null;
+  trialSessionRequired?: boolean;
+  trialRequired?: boolean;
+  ruleChecks?: RuleCheck[];
+  subscores?: MatchSubscores;
   rematchTriggers?: string[];
   healthReviewCadence?: string;
 }
 
+export interface AgentSource {
+  id: string;
+  title: string | null;
+  source: string | null;
+  score: number | null;
+}
+
 export interface AgentUiResponse {
   text?: string;
+  responseLanguage?: "en" | "ar";
   questionPlan?: QuestionPlan;
   rankedMatches?: RankedMatch[];
   matchEvaluation?: MatchEvaluation;
+  sources?: AgentSource[];
   followUpQuestions?: string[];
-  sources?: Array<{
-    name: string;
-    score: number;
-  }>;
-  responseLanguage?: "en" | "ar";
 }
+
+/* ─── Static Data ────────────────────────────────────────────────────── */
 
 export const MENTOR_PHOTOS: Record<string, string> = {
   mentor_001: "/mentors/maya.jpg",

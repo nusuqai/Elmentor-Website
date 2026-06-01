@@ -236,15 +236,19 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
                             
                             {q.type === 'single_select' && q.options && (
                               <div className="flex flex-wrap gap-[8px]">
-                                {q.options.map((opt) => (
-                                  <button
-                                    key={opt}
-                                    onClick={() => setFormAnswers({...formAnswers, [q.id]: opt})}
-                                    className={`px-[12px] py-[6px] rounded-full text-[12px] font-semibold transition-colors ${formAnswers[q.id] === opt ? 'bg-teal-accent text-white' : 'bg-off-white text-text-gray hover:bg-light-gray'}`}
-                                  >
-                                    {opt}
-                                  </button>
-                                ))}
+                                {q.options.map((opt) => {
+                                  const label = typeof opt === 'string' ? opt : opt.label;
+                                  const val = typeof opt === 'string' ? opt : opt.value;
+                                  return (
+                                    <button
+                                      key={val}
+                                      onClick={() => setFormAnswers({...formAnswers, [q.id]: val})}
+                                      className={`px-[12px] py-[6px] rounded-full text-[12px] font-semibold transition-colors ${formAnswers[q.id] === val ? 'bg-teal-accent text-white' : 'bg-off-white text-text-gray hover:bg-light-gray'}`}
+                                    >
+                                      {label}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -299,11 +303,11 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
                             {/* Mini Bar Chart */}
                             <div className="flex justify-between items-end h-[30px] gap-[4px] mb-[16px] border-b border-light-gray pb-[8px]">
                               {[
-                                { lbl: 'Dom', val: match.subscores.domain },
-                                { lbl: 'Goal', val: match.subscores.goal },
+                                { lbl: 'Dom', val: match.subscores.domainAlignment },
+                                { lbl: 'Goal', val: match.subscores.goalCompatibility },
                                 { lbl: 'Avail', val: match.subscores.availability },
-                                { lbl: 'Comm', val: match.subscores.communication },
-                                { lbl: 'Fit', val: match.subscores.fit }
+                                { lbl: 'Comm', val: match.subscores.communicationStyle },
+                                { lbl: 'Fit', val: match.subscores.personalityFit }
                               ].map((score, sIdx) => (
                                 <div key={sIdx} className="flex flex-col items-center flex-1 group relative">
                                   <div className="w-full bg-light-gray rounded-t-sm relative h-[20px]">
