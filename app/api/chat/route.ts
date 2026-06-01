@@ -17,9 +17,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const agentUrl =
-    process.env.AGENT_URL ||
-    "https://prepared-dyanna-nusuqai-demo-1a5b158b.koyeb.app/elmentor/query";
+  const agentUrl = process.env.AGENT_URL;
 
   try {
     const body = await req.json();
