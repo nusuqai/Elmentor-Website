@@ -130,6 +130,8 @@ export default function FeaturedMentors({ lang = "en" }: { lang?: string }) {
                 const photo = MENTOR_PHOTOS[mentor.sex] || "";
                 const domainLabel =
                   DOMAIN_LABELS[mentor.domain.toLowerCase()] || mentor.domain;
+                const name = isAr ? (mentor.name_ar || mentor.name || "") : (mentor.name_en || mentor.name || "");
+                const expertiseAreas = isAr ? (mentor.expertise_areas_ar || mentor.expertise_areas || []) : (mentor.expertise_areas_en || mentor.expertise_areas || []);
 
                 return (
                   <div
@@ -140,7 +142,7 @@ export default function FeaturedMentors({ lang = "en" }: { lang?: string }) {
                     <div className="relative h-[200px] bg-surface overflow-hidden">
                       <Image
                         src={photo}
-                        alt={mentor.name}
+                        alt={name}
                         fill
                         sizes="(max-width: 768px) 100vw, 250px"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -171,7 +173,7 @@ export default function FeaturedMentors({ lang = "en" }: { lang?: string }) {
                     >
                       <div>
                         <h3 className="text-[17px] font-semibold text-navy-base mb-1 leading-tight">
-                          {mentor.name}
+                          {name}
                         </h3>
                         <p className="text-[13px] text-text-muted mb-4 capitalize">
                           {mentor.domain}
@@ -207,7 +209,7 @@ export default function FeaturedMentors({ lang = "en" }: { lang?: string }) {
                             isAr ? "flex-row-reverse" : ""
                           }`}
                         >
-                          {mentor.expertise_areas.slice(0, 2).map((area, i) => (
+                          {expertiseAreas.slice(0, 2).map((area, i) => (
                             <span
                               key={i}
                               className="text-[11px] font-medium text-teal bg-teal/[0.06] px-2.5 py-1 rounded-full"

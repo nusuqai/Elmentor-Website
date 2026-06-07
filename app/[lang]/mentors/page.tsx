@@ -136,6 +136,10 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                 ))
               : mentors.map((mentor) => {
                   const photo = MENTOR_PHOTOS[mentor.sex];
+                  const name = lang === "ar" ? (mentor.name_ar || mentor.name || "") : (mentor.name_en || mentor.name || "");
+                  const expertiseAreas = lang === "ar" ? (mentor.expertise_areas_ar || mentor.expertise_areas || []) : (mentor.expertise_areas_en || mentor.expertise_areas || []);
+                  const fitNotes = lang === "ar" ? (mentor.fit_notes_ar || mentor.fit_notes || []) : (mentor.fit_notes_en || mentor.fit_notes || []);
+
                   return (
                     <div
                       key={mentor.id}
@@ -145,7 +149,7 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                       <div className="relative h-[220px] bg-surface overflow-hidden">
                         <Image
                           src={photo}
-                          alt={mentor.name}
+                          alt={name}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -160,7 +164,7 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                             }
                           >
                             <h3 className="text-[18px] font-semibold text-white leading-tight drop-shadow-sm">
-                              {mentor.name}
+                              {name}
                             </h3>
                             <p className="text-[13px] text-white/80 capitalize">
                               {mentor.domain}
@@ -213,7 +217,7 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                         </div>
 
                         <div className="flex flex-wrap gap-1.5 mb-4">
-                          {mentor.expertise_areas.slice(0, 3).map((area, i) => (
+                          {expertiseAreas.slice(0, 3).map((area, i) => (
                             <span
                               key={i}
                               className="text-[11px] font-medium text-teal bg-teal/[0.06] border border-teal/[0.08] px-2.5 py-1 rounded-full"
@@ -221,17 +225,19 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                               {area}
                             </span>
                           ))}
-                          {mentor.expertise_areas.length > 3 && (
+                          {expertiseAreas.length > 3 && (
                             <span className="text-[11px] font-medium text-text-muted px-2 py-1">
-                              +{mentor.expertise_areas.length - 3}{" "}
+                              +{expertiseAreas.length - 3}{" "}
                               {lang === "ar" ? "أخرى" : "more"}
                             </span>
                           )}
                         </div>
 
-                        <p className="text-[13px] text-text-muted leading-relaxed mb-5 line-clamp-2 italic">
-                          &ldquo;{mentor.fit_notes[0]}&rdquo;
-                        </p>
+                        {fitNotes.length > 0 && (
+                          <p className="text-[13px] text-text-muted leading-relaxed mb-5 line-clamp-2 italic">
+                            &ldquo;{fitNotes[0]}&rdquo;
+                          </p>
+                        )}
 
                         <div className="flex gap-3 mt-auto">
                           <button
@@ -241,7 +247,7 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                             {t.mentorsPage.viewProfile}
                           </button>
                           <Link
-                            href={`/${lang}/chat?mentor=${encodeURIComponent(mentor.name)}`}
+                            href={`/${lang}/chat?mentor=${encodeURIComponent(name)}`}
                             className="flex-1 text-center text-[13px] font-semibold text-white bg-navy-base rounded-lg py-2.5 hover:bg-deep-navy transition-colors"
                           >
                             {t.mentorsPage.getMatched}

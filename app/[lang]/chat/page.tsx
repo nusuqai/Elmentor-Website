@@ -18,7 +18,12 @@ import {
   SparkleIcon,
   ArrowRightIcon,
   ChevronDownIcon,
+  BriefcaseIcon,
+  MapPinIcon,
+  ClockIcon,
+  GlobeIcon,
 } from "../../components/icons";
+import { MENTOR_PHOTOS, DOMAIN_LABELS } from "../../lib/types";
 import type {
   AgentUiResponse,
   ChatMessage,
@@ -633,9 +638,12 @@ function MatchCard({ match, lang }: { match: RankedMatch; lang: "en" | "ar" }) {
     return Math.round(Math.min(n, 100));
   };
 
-  // Prefer mentorName (schema field), fall back to name (legacy)
-  let displayName = toStr(match.mentorName || match.name);
-  const searchId = match.mentorId || displayName;
+  // Prefer localized mentor name, fall back to mentorName / name
+  let displayName = lang === "ar"
+    ? (match.mentor?.name_ar || match.mentorName || match.name)
+    : (match.mentor?.name_en || match.mentorName || match.name);
+  displayName = toStr(displayName);
+  const searchId = match.mentor?.id || match.mentorId || displayName;
 
   if (
     !displayName ||
@@ -658,81 +666,154 @@ function MatchCard({ match, lang }: { match: RankedMatch; lang: "en" | "ar" }) {
     displayName = fallbacks[searchId] || searchId || "Unknown Mentor";
   }
 
+  const mentor = match.mentor;
+  const expertiseAreas = mentor
+    ? lang === "ar"
+      ? mentor.expertise_areas_ar
+      : mentor.expertise_areas_en
+    : undefined;
+
   const subscores = match.subscores || {};
+  const matchSummary = match.matchSummary;
 
   const subscorebars = [
     {
-      label: lang === "ar" ? "المجال" : "Domain",
+      label: lang === "ar" ? "توافق المجال" : "Domain Alignment",
       val: parseScore(subscores.domainAlignment),
+      reason: matchSummary?.domainAlignment,
     },
     {
-      label: lang === "ar" ? "الهدف" : "Goal",
-      val: parseScore(subscores.goalCompatibility),
+      label: lang === "ar" ? "توافق الأهداف" : "Goal Compatibility",
+      val: parseScore(subscores.compatibility ?? subscores.goalCompatibility),
+      reason: matchSummary?.compatibility,
     },
     {
-      label: lang === "ar" ? "المتاح" : "Avail",
+      label: lang === "ar" ? "توافق المواعيد" : "Availability",
       val: parseScore(subscores.availability),
+      reason: matchSummary?.availability,
     },
     {
-      label: lang === "ar" ? "الاتصال" : "Comm",
+      label: lang === "ar" ? "أسلوب التواصل" : "Communication Style",
       val: parseScore(subscores.communicationStyle),
+      reason: matchSummary?.communicationStyle,
     },
     {
-      label: lang === "ar" ? "الملاءمة" : "Fit",
+      label: lang === "ar" ? "ملاءمة الشخصية" : "Personality Fit",
       val: parseScore(subscores.personalityFit),
+      reason: matchSummary?.personalityFit,
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-border/60 hover:shadow-card transition-shadow duration-200">
-      <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+    <div className="bg-white rounded-xl p-5 border border-border/60 hover:shadow-card transition-shadow duration-200">
+      {/* Title & Top Action bar */}
+      <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
         <div>
-          <p className="text-[15px] font-semibold text-navy-base">
+          <p className="text-[16px] font-bold text-navy-base leading-snug">
             {displayName}
           </p>
           <span
-            className={`inline-block text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded mt-1 ${bandClass}`}
+            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded mt-1.5 ${bandClass}`}
           >
             {String(match.band).replace(/_/g, " ")}
           </span>
         </div>
         <Link
-          href={`/${lang}/mentors`}
-          className="shrink-0 text-[12px] font-semibold text-teal bg-teal/[0.08] hover:bg-teal/[0.15] border border-teal/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1"
+          href={`/${lang}/mentors?mentor=${encodeURIComponent(displayName)}`}
+          className="shrink-0 text-[12px] font-semibold text-teal bg-teal/[0.08] hover:bg-teal/[0.15] border border-teal/10 px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1"
         >
           {t.chatPage.viewProfileBtn}
         </Link>
       </div>
 
-      {match.summary && (
-        <div className="text-[13px] text-text-secondary leading-relaxed mb-3">
+      {/* Mentor Profile Details (New Section) */}
+      {mentor && (
+        <div className="flex gap-4 items-start border-b border-border/40 pb-4 mb-4">
+          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-surface shrink-0 border border-border/40 shadow-sm">
+            <Image
+              src={MENTOR_PHOTOS[mentor.sex]}
+              alt={displayName}
+              fill
+              className="object-cover"
+              sizes="56px"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-bold text-teal bg-teal/[0.06] border border-teal/[0.08] px-2 py-0.5 rounded-full capitalize">
+                {DOMAIN_LABELS[mentor.domain.toLowerCase()] || mentor.domain}
+              </span>
+              <span className="text-[11px] font-semibold text-text-secondary flex items-center gap-1">
+                <BriefcaseIcon size={12} className="text-text-muted shrink-0" />
+                {mentor.years_experience} {lang === "ar" ? "سنوات خبرة" : "yrs exp"}
+              </span>
+              {mentor.location && (
+                <span className="text-[11px] font-semibold text-text-secondary flex items-center gap-1">
+                  <MapPinIcon size={12} className="text-text-muted shrink-0" />
+                  {mentor.location}
+                </span>
+              )}
+            </div>
+            
+            {/* Localized Stage or Title */}
+            {(mentor.current_stage_en || mentor.current_stage_ar) && (
+              <p className="text-[12px] text-text-muted mt-1 leading-normal">
+                {lang === "ar" ? mentor.current_stage_ar : mentor.current_stage_en}
+              </p>
+            )}
+            
+            {/* Expertise Areas Tags */}
+            {expertiseAreas && expertiseAreas.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2.5">
+                {expertiseAreas.slice(0, 3).map((area, idx) => (
+                  <span key={idx} className="text-[10px] font-semibold text-text-secondary bg-surface border border-border/60 px-2.5 py-0.5 rounded-md">
+                    {area}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* General Legacy Summary (Only if structured matchSummary is missing) */}
+      {!match.matchSummary && match.summary && (
+        <div className="text-[13px] text-text-secondary leading-relaxed mb-4">
           <MarkdownText content={toStr(match.summary)} />
         </div>
       )}
 
-      {/* Subscores */}
-      <div className="grid grid-cols-5 gap-1 mb-3">
+      {/* Structured Score Tracks with integrated scoring reasons */}
+      <div className="flex flex-col gap-4">
         {subscorebars.map((s, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
-            <div className="w-full h-1.5 bg-border/60 rounded-full overflow-hidden">
+          <div key={i} className="flex flex-col gap-1.5 bg-surface/30 hover:bg-surface/60 p-3.5 rounded-xl border border-border/30 transition-all duration-200">
+            {/* Category label and percentage */}
+            <div className="flex justify-between items-center text-[13px]">
+              <span className="font-bold text-navy-base">{s.label}</span>
+              <span className="font-bold text-teal tabular-nums text-[14px]">{s.val}%</span>
+            </div>
+
+            {/* Horizontal progress bar */}
+            <div className="w-full h-2 bg-border/40 rounded-full overflow-hidden">
               <div
-                className="h-full bg-teal rounded-full transition-all duration-700"
+                className="h-full bg-gradient-to-r from-teal/70 to-teal rounded-full transition-all duration-700"
                 style={{ width: `${Math.max(s.val, 4)}%` }}
               />
             </div>
-            <span className="text-[10px] text-text-muted text-center leading-tight">
-              {s.label}
-            </span>
-            <span className="text-[11px] font-semibold text-navy-base">
-              {s.val}
-            </span>
+
+            {/* scoring reason description */}
+            {s.reason && (
+              <p className="text-[12px] text-text-secondary leading-relaxed mt-1 border-l-2 border-teal/20 pl-2 italic">
+                {s.reason}
+              </p>
+            )}
           </div>
         ))}
       </div>
 
       {/* Rule checks */}
       {match.ruleChecks && match.ruleChecks.length > 0 && (
-        <div>
+        <div className="mt-4 pt-4 border-t border-border/40">
           <button
             onClick={() => setRulesOpen(!rulesOpen)}
             className="flex items-center gap-1 text-[12px] font-medium text-text-muted hover:text-text-secondary transition-colors"

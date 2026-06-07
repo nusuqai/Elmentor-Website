@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
-import { AgentUiResponse, ChatMessage, RankedMatch } from '../lib/types';
-import { CloseIcon, SendIcon, SparkleIcon, BrainIcon } from './icons';
+import Image from 'next/image';
+import { AgentUiResponse, ChatMessage, RankedMatch, DOMAIN_LABELS, MENTOR_PHOTOS } from '../lib/types';
+import { CloseIcon, SendIcon, SparkleIcon, BrainIcon, BriefcaseIcon, MapPinIcon } from './icons';
 
 interface AiChatPanelProps {
   isOpen: boolean;
@@ -269,67 +270,175 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
                     {/* Ranked Matches */}
                     {(msg.content as AgentUiResponse).rankedMatches && (msg.content as AgentUiResponse).rankedMatches!.length > 0 && (
                       <div className="flex flex-col gap-[12px]">
-                        {(msg.content as AgentUiResponse).rankedMatches!.map((match: RankedMatch, mIdx) => (
-                          <div key={mIdx} className="bg-white border border-light-gray rounded-sm p-[16px] shadow-sm">
-                            <div className="flex items-start justify-between mb-[12px]">
-                              <div className="flex flex-col">
-                                <span className="font-semibold text-navy-base text-[16px]">{match.name}</span>
-                                <span className={`text-[10px] font-bold uppercase tracking-wide px-[6px] py-[2px] rounded-sm mt-[4px] inline-block w-max ${
-                                  match.band === 'excellent' ? 'bg-success-green/10 text-success-green' :
-                                  match.band === 'recommended' ? 'bg-teal-accent/10 text-teal-accent' :
-                                  match.band === 'pre_alignment' ? 'bg-purple-accent/10 text-purple-accent' :
-                                  'bg-placeholder-gray/10 text-placeholder-gray'
-                                }`}>
-                                  {match.band.replace('_', ' ')} Match
-                                </span>
+                        {(msg.content as AgentUiResponse).rankedMatches!.map((match: RankedMatch, mIdx) => {
+                          const displayName = lang === 'ar'
+                            ? (match.mentor?.name_ar || match.mentorName || match.name || '')
+                            : (match.mentor?.name_en || match.mentorName || match.name || '');
+                          
+                          const parseScore = (val: unknown) => {
+                            let n = Number(val);
+                            if (isNaN(n)) return 0;
+                            if (n > 0 && n <= 1.0) n = n * 100;
+                            return Math.round(Math.min(n, 100));
+                          };
+
+                          const mentor = match.mentor;
+                          const expertiseAreas = mentor
+                            ? lang === 'ar'
+                              ? mentor.expertise_areas_ar
+                              : mentor.expertise_areas_en
+                            : undefined;
+
+                          const subscores = match.subscores || {};
+                          const matchSummary = match.matchSummary;
+
+                          const subscorebars = [
+                            {
+                              label: lang === 'ar' ? "توافق المجال" : "Domain Alignment",
+                              val: parseScore(subscores.domainAlignment),
+                              reason: matchSummary?.domainAlignment,
+                            },
+                            {
+                              label: lang === 'ar' ? "توافق الأهداف" : "Goal Compatibility",
+                              val: parseScore(subscores.compatibility ?? subscores.goalCompatibility),
+                              reason: matchSummary?.compatibility,
+                            },
+                            {
+                              label: lang === 'ar' ? "توافق المواعيد" : "Availability",
+                              val: parseScore(subscores.availability),
+                              reason: matchSummary?.availability,
+                            },
+                            {
+                              label: lang === 'ar' ? "أسلوب التواصل" : "Communication Style",
+                              val: parseScore(subscores.communicationStyle),
+                              reason: matchSummary?.communicationStyle,
+                            },
+                            {
+                              label: lang === 'ar' ? "ملاءمة الشخصية" : "Personality Fit",
+                              val: parseScore(subscores.personalityFit),
+                              reason: matchSummary?.personalityFit,
+                            },
+                          ];
+
+                          const bandColors: Record<string, string> = {
+                            excellent: 'bg-success-green/10 text-success-green',
+                            recommended: 'bg-teal-accent/10 text-teal-accent',
+                            pre_alignment: 'bg-purple-accent/10 text-purple-accent',
+                            rejected: 'bg-placeholder-gray/10 text-placeholder-gray'
+                          };
+                          const bandClass = bandColors[match.band] || bandColors.recommended;
+
+                          return (
+                            <div key={mIdx} className="bg-white border border-light-gray rounded-sm p-[16px] shadow-sm">
+                              {/* Mentor Header Info */}
+                              <div className="flex items-start justify-between mb-[12px] gap-2">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-navy-base text-[16px]">{displayName}</span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wide px-[6px] py-[2px] rounded-sm mt-[4px] inline-block w-max ${bandClass}`}>
+                                    {match.band.replace('_', ' ')} Match
+                                  </span>
+                                </div>
+                                
+                                {/* Score Circle */}
+                                <div className="relative w-[48px] h-[48px] rounded-full flex items-center justify-center bg-very-light-gray shrink-0">
+                                  <div 
+                                    className="absolute inset-0 rounded-full"
+                                    style={{
+                                      background: `conic-gradient(#077F7F ${match.score}%, transparent 0)`
+                                    }}
+                                  />
+                                  <div className="absolute inset-[3px] bg-white rounded-full" />
+                                  <span className="relative z-10 text-[14px] font-bold text-navy-base">{match.score}</span>
+                                </div>
                               </div>
-                              
-                              {/* Score Circle */}
-                              <div className="relative w-[48px] h-[48px] rounded-full flex items-center justify-center bg-very-light-gray">
-                                <div 
-                                  className="absolute inset-0 rounded-full"
-                                  style={{
-                                    background: `conic-gradient(#077F7F ${match.score}%, transparent 0)`
-                                  }}
-                                />
-                                <div className="absolute inset-[3px] bg-white rounded-full" />
-                                <span className="relative z-10 text-[14px] font-bold text-navy-base">{match.score}</span>
-                              </div>
-                            </div>
-                            
-                            <p className="text-[13px] text-text-gray mb-[16px] leading-relaxed">
-                              {match.summary}
-                            </p>
-                            
-                            {/* Mini Bar Chart */}
-                            <div className="flex justify-between items-end h-[30px] gap-[4px] mb-[16px] border-b border-light-gray pb-[8px]">
-                              {[
-                                { lbl: 'Dom', val: match.subscores.domainAlignment },
-                                { lbl: 'Goal', val: match.subscores.goalCompatibility },
-                                { lbl: 'Avail', val: match.subscores.availability },
-                                { lbl: 'Comm', val: match.subscores.communicationStyle },
-                                { lbl: 'Fit', val: match.subscores.personalityFit }
-                              ].map((score, sIdx) => (
-                                <div key={sIdx} className="flex flex-col items-center flex-1 group relative">
-                                  <div className="w-full bg-light-gray rounded-t-sm relative h-[20px]">
-                                    <div 
-                                      className="absolute bottom-0 left-0 w-full bg-teal-accent rounded-t-sm transition-all"
-                                      style={{ height: `${Math.max(score.val, 10)}%` }} // minimum height for visibility
+
+                              {/* Mentor Details (Gender photo, domain, location) */}
+                              {mentor && (
+                                <div className="flex gap-3 items-start border-b border-light-gray pb-[12px] mb-[12px]">
+                                  <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-very-light-gray shrink-0 border border-light-gray">
+                                    <Image
+                                      src={MENTOR_PHOTOS[mentor.sex]}
+                                      alt={displayName}
+                                      fill
+                                      className="object-cover"
+                                      sizes="44px"
                                     />
                                   </div>
-                                  <span className="text-[9px] text-placeholder-gray font-semibold mt-[4px]">{score.lbl}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[10px] font-bold text-teal-accent bg-teal-accent/5 border border-teal-accent/10 px-1.5 py-0.5 rounded-full capitalize">
+                                        {DOMAIN_LABELS[mentor.domain.toLowerCase()] || mentor.domain}
+                                      </span>
+                                      <span className="text-[10px] font-semibold text-text-gray flex items-center gap-1">
+                                        <BriefcaseIcon size={11} className="text-placeholder-gray shrink-0" />
+                                        {mentor.years_experience} {lang === 'ar' ? 'سنوات' : 'yrs'}
+                                      </span>
+                                      {mentor.location && (
+                                        <span className="text-[10px] font-semibold text-text-gray flex items-center gap-1">
+                                          <MapPinIcon size={11} className="text-placeholder-gray shrink-0" />
+                                          {mentor.location}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {/* Localized Stage or Title */}
+                                    {(mentor.current_stage_en || mentor.current_stage_ar) && (
+                                      <p className="text-[11px] text-placeholder-gray mt-1 leading-tight">
+                                        {lang === 'ar' ? mentor.current_stage_ar : mentor.current_stage_en}
+                                      </p>
+                                    )}
+                                    {/* Expertise Areas */}
+                                    {expertiseAreas && expertiseAreas.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1.5">
+                                        {expertiseAreas.slice(0, 2).map((area, idx) => (
+                                          <span key={idx} className="text-[9px] font-semibold text-text-gray bg-very-light-gray border border-light-gray px-1.5 py-0.5 rounded">
+                                            {area}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              ))}
-                            </div>
+                              )}
 
-                            <button 
-                              onClick={() => onViewProfile && onViewProfile(match.mentorId)}
-                              className="text-[13px] text-teal-accent font-semibold hover:underline w-full text-center"
-                            >
-                              View Full Profile
-                            </button>
-                          </div>
-                        ))}
+                              {/* General summary fallback if structured is missing */}
+                              {!match.matchSummary && match.summary && (
+                                <p className="text-[13px] text-text-gray mb-[12px] leading-relaxed">
+                                  {match.summary}
+                                </p>
+                              )}
+
+                              {/* Restructured Subscore rows with scoring reasons */}
+                              <div className="flex flex-col gap-3">
+                                {subscorebars.map((s, i) => (
+                                  <div key={i} className="flex flex-col gap-1 bg-very-light-gray/40 hover:bg-very-light-gray/80 p-2.5 rounded-lg border border-light-gray/40 transition-colors">
+                                    <div className="flex justify-between items-center text-[12px]">
+                                      <span className="font-bold text-navy-base">{s.label}</span>
+                                      <span className="font-bold text-teal-accent tabular-nums text-[13px]">{s.val}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-light-gray rounded-full overflow-hidden">
+                                      <div 
+                                        className="h-full bg-teal-accent rounded-full transition-all duration-700"
+                                        style={{ width: `${Math.max(s.val, 4)}%` }}
+                                      />
+                                    </div>
+                                    {s.reason && (
+                                      <p className="text-[11px] text-text-gray leading-relaxed mt-0.5 border-l-2 border-teal-accent/20 pl-1.5 italic">
+                                        {s.reason}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              <button 
+                                onClick={() => onViewProfile && onViewProfile(mentor?.id || match.mentorId || '')}
+                                className="text-[13px] text-teal-accent font-semibold hover:underline w-full text-center mt-3 pt-3 border-t border-light-gray"
+                              >
+                                View Full Profile
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </>

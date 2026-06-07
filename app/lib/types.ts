@@ -1,23 +1,35 @@
 export interface Mentor {
   id: string;
-  name: string;
+  sex: "male" | "female";
+  name_en: string;
+  name_ar: string;
   domain: string;
-  expertise_areas: string[];
-  current_stage: string;
+  location?: string;
+  description_en: string;
+  description_ar: string;
+  expertise_areas_en: string[];
+  expertise_areas_ar: string[];
+  current_stage_en: string;
+  current_stage_ar: string;
   years_experience: number;
   current_mentees: number;
   availability: string[];
-  session_frequency?: string;
-  communication_channels?: string[];
   communication_style: string[];
   personality_tags: string[];
   languages: string[];
-  fit_notes: string[];
+  fit_notes_en: string[];
+  fit_notes_ar: string[];
+
+  // Legacy fallback support:
+  name?: string;
+  description?: string;
+  expertise_areas?: string[];
+  current_stage?: string;
+  fit_notes?: string[];
+  session_frequency?: string;
+  communication_channels?: string[];
   is_demo?: boolean;
   photo?: string;
-  sex: "male" | "female";
-  location?: string;
-  description?: string;
 }
 
 export type MessageRole = "user" | "assistant";
@@ -82,7 +94,8 @@ export interface QuestionPlan {
 
 export interface MatchSubscores {
   domainAlignment: number;
-  goalCompatibility: number;
+  compatibility: number;
+  goalCompatibility?: number; // Fallback
   availability: number;
   communicationStyle: number;
   personalityFit: number;
@@ -98,16 +111,24 @@ export interface RuleCheck {
 }
 
 export interface RankedMatch {
-  mentorId: string;
-  /** Primary display name — from schema */
-  mentorName: string;
-  /** Legacy fallback — some responses still send `name` */
-  name?: string;
-  band: "excellent" | "recommended" | "pre_alignment" | "rejected";
+  mentor: Mentor;
   score: number;
-  summary: string;
+  band: "excellent" | "recommended" | "pre_alignment" | "rejected";
   subscores: MatchSubscores;
-  ruleChecks: RuleCheck[];
+  matchSummary?: {
+    domainAlignment: string;
+    compatibility: string;
+    availability: string;
+    communicationStyle: string;
+    personalityFit: string;
+  };
+
+  // Legacy fallback support
+  mentorId?: string;
+  mentorName?: string;
+  name?: string;
+  summary?: string;
+  ruleChecks?: RuleCheck[];
   nextAction?: "approve" | "trial_session" | "pre_alignment_session" | "reject";
 }
 
@@ -134,11 +155,13 @@ export interface AgentSource {
 export interface AgentUiResponse {
   text?: string;
   responseLanguage?: "en" | "ar";
-  questionPlan?: QuestionPlan;
+  questionPlan?: QuestionPlan | null;
   rankedMatches?: RankedMatch[];
-  matchEvaluation?: MatchEvaluation;
-  sources?: AgentSource[];
-  followUpQuestions?: string[];
+  
+  // Legacy / UI helper support
+  matchEvaluation?: MatchEvaluation | null;
+  sources?: AgentSource[] | null;
+  followUpQuestions?: string[] | null;
 }
 
 /* ─── Static Data ────────────────────────────────────────────────────── */

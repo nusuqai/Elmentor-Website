@@ -41,6 +41,12 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
 
   if (!mentor) return null;
 
+  const name = isAr ? (mentor.name_ar || mentor.name || '') : (mentor.name_en || mentor.name || '');
+  const description = isAr ? (mentor.description_ar || mentor.description || '') : (mentor.description_en || mentor.description || '');
+  const currentStage = isAr ? (mentor.current_stage_ar || mentor.current_stage || '') : (mentor.current_stage_en || mentor.current_stage || '');
+  const expertiseAreas = isAr ? (mentor.expertise_areas_ar || mentor.expertise_areas || []) : (mentor.expertise_areas_en || mentor.expertise_areas || []);
+  const fitNotes = isAr ? (mentor.fit_notes_ar || mentor.fit_notes || []) : (mentor.fit_notes_en || mentor.fit_notes || []);
+
   const photo = MENTOR_PHOTOS[mentor.sex] || '';
   const tabs = isAr ? ['نظرة عامة', 'الخبرات', 'الجدول والاتصال'] : ['Overview', 'Expertise', 'Schedule'];
 
@@ -57,7 +63,7 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
       >
         {/* Header */}
         <div className="relative h-[160px] bg-surface shrink-0 overflow-hidden">
-          <Image src={photo} alt={mentor.name} fill className="object-cover opacity-90" sizes="600px" priority />
+          <Image src={photo} alt={name} fill className="object-cover opacity-90" sizes="600px" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent" />
           <button
             onClick={onClose}
@@ -74,13 +80,13 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
           <div className={`flex items-end gap-4 mb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
             <Image
               src={photo}
-              alt={mentor.name}
+              alt={name}
               width={80}
               height={80}
               className="rounded-xl object-cover w-20 h-20 border-4 border-white shadow-card"
             />
             <div className="pb-1">
-              <h2 className="text-[24px] font-bold text-navy-base leading-tight">{mentor.name}</h2>
+              <h2 className="text-[24px] font-bold text-navy-base leading-tight">{name}</h2>
               <div className={`flex items-center gap-2 mt-1 ${isAr ? 'flex-row-reverse' : ''}`}>
                 <span className="text-[13px] font-medium text-text-secondary capitalize">{mentor.domain}</span>
                 <span className="text-border">|</span>
@@ -120,13 +126,13 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
           {(tab === 'Overview' || tab === 'نظرة عامة') && (
             <div className="flex flex-col gap-5">
               <p className="text-[15px] text-text-secondary leading-relaxed" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                {mentor.description ? mentor.description : isAr ? (
+                {description ? description : isAr ? (
                   <>
-                    {mentor.name} {t.detailModal.isExperienced} {mentor.domain} {t.detailModal.professionalWith} {mentor.years_experience} {t.detailModal.yearsInIndustry} {mentor.current_stage}.
+                    {name} {t.detailModal.isExperienced} {mentor.domain} {t.detailModal.professionalWith} {mentor.years_experience} {t.detailModal.yearsInIndustry} {currentStage}.
                   </>
                 ) : (
                   <>
-                    {mentor.name} {t.detailModal.isExperienced} {mentor.domain} {t.detailModal.professionalWith} {mentor.years_experience} {t.detailModal.yearsInIndustry} {mentor.current_stage}.
+                    {name} {t.detailModal.isExperienced} {mentor.domain} {t.detailModal.professionalWith} {mentor.years_experience} {t.detailModal.yearsInIndustry} {currentStage}.
                   </>
                 )}
               </p>
@@ -163,7 +169,7 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
                 </div>
               </div>
 
-              {mentor.fit_notes.map((note, i) => (
+              {fitNotes.map((note, i) => (
                 <div key={i} className={`bg-teal/[0.04] p-4 ${
                   isAr ? 'border-r-2 border-teal rounded-l-lg text-right' : 'border-l-2 border-teal rounded-r-lg text-left'
                 }`}>
@@ -180,7 +186,7 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
               <div>
                 <h4 className="text-[13px] font-semibold text-text-muted uppercase tracking-wider mb-3">{t.detailModal.coreAreas}</h4>
                 <div className={`flex flex-wrap gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                  {mentor.expertise_areas.map((a, i) => (
+                  {expertiseAreas.map((a, i) => (
                     <span key={i} className="text-[13px] font-medium text-teal bg-teal/[0.06] border border-teal/10 px-3 py-1.5 rounded-full">{a}</span>
                   ))}
                 </div>
@@ -255,13 +261,13 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
         {/* Footer */}
         <div className={`shrink-0 p-6 border-t border-border flex gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
           <Link
-            href={`/${lang}/chat?mentor=${encodeURIComponent(mentor.name)}`}
+            href={`/${lang}/chat?mentor=${encodeURIComponent(name)}`}
             className={`flex-1 inline-flex items-center justify-center gap-2 bg-navy-base text-white text-[14px] font-semibold py-3 rounded-xl hover:bg-deep-navy transition-colors ${
               isAr ? 'flex-row-reverse' : ''
             }`}
             onClick={onClose}
           >
-            {t.detailModal.getMatchedWith} {mentor.name.split(' ')[0]}
+            {t.detailModal.getMatchedWith} {name.split(' ')[0] || ''}
             <ArrowRightIcon size={16} className={isAr ? 'rotate-180' : ''} />
           </Link>
           <button
