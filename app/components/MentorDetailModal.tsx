@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Mentor, MENTOR_PHOTOS } from '../lib/types';
-import { CloseIcon, BriefcaseIcon, ClockIcon, GlobeIcon, ArrowRightIcon } from './icons';
+import { CloseIcon, BriefcaseIcon, ClockIcon, GlobeIcon, ArrowRightIcon, MapPinIcon } from './icons';
 import { translations } from '../data/translations';
 
 interface Props {
@@ -120,7 +120,7 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
           {(tab === 'Overview' || tab === 'نظرة عامة') && (
             <div className="flex flex-col gap-5">
               <p className="text-[15px] text-text-secondary leading-relaxed" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                {isAr ? (
+                {mentor.description ? mentor.description : isAr ? (
                   <>
                     {mentor.name} {t.detailModal.isExperienced} {mentor.domain} {t.detailModal.professionalWith} {mentor.years_experience} {t.detailModal.yearsInIndustry} {mentor.current_stage}.
                   </>
@@ -137,11 +137,25 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
                   <p className="text-[20px] font-bold text-navy-base">{mentor.years_experience}</p>
                   <p className="text-[12px] text-text-muted">{t.detailModal.yearsExp}</p>
                 </div>
-                <div className="bg-surface rounded-xl p-4 text-center">
-                  <ClockIcon size={18} className="text-teal mx-auto mb-2" />
-                  <p className="text-[14px] font-bold text-navy-base capitalize">{mentor.session_frequency}</p>
-                  <p className="text-[12px] text-text-muted">{t.detailModal.sessions}</p>
-                </div>
+                {mentor.location ? (
+                  <div className="bg-surface rounded-xl p-4 text-center">
+                    <MapPinIcon size={18} className="text-teal mx-auto mb-2" />
+                    <p className="text-[14px] font-bold text-navy-base capitalize">{mentor.location}</p>
+                    <p className="text-[12px] text-text-muted">{isAr ? 'الموقع' : 'Location'}</p>
+                  </div>
+                ) : mentor.session_frequency ? (
+                  <div className="bg-surface rounded-xl p-4 text-center">
+                    <ClockIcon size={18} className="text-teal mx-auto mb-2" />
+                    <p className="text-[14px] font-bold text-navy-base capitalize">{mentor.session_frequency}</p>
+                    <p className="text-[12px] text-text-muted">{t.detailModal.sessions}</p>
+                  </div>
+                ) : (
+                  <div className="bg-surface rounded-xl p-4 text-center">
+                    <MapPinIcon size={18} className="text-teal mx-auto mb-2" />
+                    <p className="text-[14px] font-bold text-navy-base capitalize">-</p>
+                    <p className="text-[12px] text-text-muted">{isAr ? 'الموقع' : 'Location'}</p>
+                  </div>
+                )}
                 <div className="bg-surface rounded-xl p-4 text-center">
                   <GlobeIcon size={18} className="text-teal mx-auto mb-2" />
                   <p className="text-[14px] font-bold text-navy-base">{mentor.languages.join(', ')}</p>
@@ -193,14 +207,28 @@ export default function MentorDetailModal({ mentor, onClose, lang = 'en' }: Prop
           {(tab === 'Schedule' || tab === 'الجدول والاتصال') && (
             <div className={`flex flex-col gap-5 ${isAr ? 'text-right' : 'text-left'}`}>
               <div className={`grid grid-cols-2 gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <div className="bg-surface rounded-xl p-4">
-                  <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{t.detailModal.frequency}</p>
-                  <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.session_frequency}</p>
-                </div>
-                <div className="bg-surface rounded-xl p-4">
-                  <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{t.detailModal.channels}</p>
-                  <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.communication_channels.join(', ')}</p>
-                </div>
+                {mentor.location ? (
+                  <div className="bg-surface rounded-xl p-4">
+                    <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{isAr ? 'الموقع' : 'Location'}</p>
+                    <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.location}</p>
+                  </div>
+                ) : mentor.session_frequency ? (
+                  <div className="bg-surface rounded-xl p-4">
+                    <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{t.detailModal.frequency}</p>
+                    <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.session_frequency}</p>
+                  </div>
+                ) : null}
+                {mentor.languages ? (
+                  <div className="bg-surface rounded-xl p-4">
+                    <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{isAr ? 'اللغات' : 'Languages'}</p>
+                    <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.languages.join(', ')}</p>
+                  </div>
+                ) : mentor.communication_channels ? (
+                  <div className="bg-surface rounded-xl p-4">
+                    <p className="text-[12px] text-text-muted font-semibold uppercase tracking-wider mb-1">{t.detailModal.channels}</p>
+                    <p className="text-[15px] text-navy-base font-semibold capitalize">{mentor.communication_channels.join(', ')}</p>
+                  </div>
+                ) : null}
               </div>
               <div>
                 <h4 className="text-[13px] font-semibold text-text-muted uppercase tracking-wider mb-3">{t.detailModal.availableWindows}</h4>

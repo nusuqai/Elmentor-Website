@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRightIcon, BriefcaseIcon, ClockIcon } from "./icons";
+import { ArrowRightIcon, BriefcaseIcon, ClockIcon, MapPinIcon } from "./icons";
 import { DOMAIN_LABELS, Mentor, MENTOR_PHOTOS } from "../lib/types";
 
 function FeaturedSkeleton() {
@@ -189,10 +189,17 @@ export default function FeaturedMentors({ lang = "en" }: { lang?: string }) {
                             />
                             {mentor.years_experience} {localCopy.yrs}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <ClockIcon size={14} className="text-text-muted" />
-                            {mentor.session_frequency}
-                          </span>
+                          {mentor.location ? (
+                            <span className="flex items-center gap-1.5">
+                              <MapPinIcon size={14} className="text-text-muted" />
+                              {mentor.location}
+                            </span>
+                          ) : mentor.session_frequency ? (
+                            <span className="flex items-center gap-1.5">
+                              <ClockIcon size={14} className="text-text-muted" />
+                              {mentor.session_frequency}
+                            </span>
+                          ) : null}
                         </div>
 
                         <div

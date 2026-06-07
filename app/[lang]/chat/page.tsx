@@ -652,7 +652,8 @@ function MatchCard({ match, lang }: { match: RankedMatch; lang: "en" | "ar" }) {
       mentor_007: lang === "ar" ? "كريم يوسف" : "Karim Youssef",
       mentor_008: lang === "ar" ? "داليا ناصر" : "Dalia Nasser",
       mentor_009: lang === "ar" ? "يارا أمين" : "Yara Amin",
-      mentor_010: lang === "ar" ? "طارق سالم" : "Tarek Salem"
+      mentor_010: lang === "ar" ? "طارق سالم" : "Tarek Salem",
+      mentor_011: lang === "ar" ? "أميرة فتحي" : "Amira Fathy"
     };
     displayName = fallbacks[searchId] || searchId || "Unknown Mentor";
   }
@@ -955,7 +956,7 @@ function ChatPageContent({ lang }: { lang: "en" | "ar" }) {
           "Content-Type": "application/json",
           "mcp-session-id": sessionIdRef.current,
         },
-        body: JSON.stringify({ query, topK: 6 }),
+        body: JSON.stringify({ query, topK: 6, lang }),
       });
 
       const data: AgentUiResponse = await res.json();
@@ -1024,7 +1025,7 @@ function ChatPageContent({ lang }: { lang: "en" | "ar" }) {
           "Content-Type": "application/json",
           "mcp-session-id": sessionIdRef.current,
         },
-        body: JSON.stringify({ query, topK: 6 }),
+        body: JSON.stringify({ query, topK: 6, lang }),
       });
 
       const data: AgentUiResponse = await res.json();

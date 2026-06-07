@@ -7,15 +7,17 @@ export interface Mentor {
   years_experience: number;
   current_mentees: number;
   availability: string[];
-  session_frequency: string;
-  communication_channels: string[];
+  session_frequency?: string;
+  communication_channels?: string[];
   communication_style: string[];
   personality_tags: string[];
   languages: string[];
   fit_notes: string[];
-  is_demo: boolean;
+  is_demo?: boolean;
   photo?: string;
   sex: "male" | "female";
+  location?: string;
+  description?: string;
 }
 
 export type MessageRole = "user" | "assistant";

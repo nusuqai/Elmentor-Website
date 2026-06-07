@@ -6,7 +6,7 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import MentorDetailModal from "../../components/MentorDetailModal";
-import { BriefcaseIcon, ClockIcon, GlobeIcon } from "../../components/icons";
+import { BriefcaseIcon, ClockIcon, GlobeIcon, MapPinIcon } from "../../components/icons";
 import { Mentor, MENTOR_PHOTOS } from "../../lib/types";
 import { translations } from "../../data/translations";
 
@@ -195,10 +195,17 @@ function MentorsContent({ lang }: { lang: "en" | "ar" }) {
                             {mentor.years_experience}{" "}
                             {lang === "ar" ? "سنوات" : "years"}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <ClockIcon size={14} className="text-text-muted" />
-                            {mentor.session_frequency}
-                          </span>
+                          {mentor.location ? (
+                            <span className="flex items-center gap-1.5">
+                              <MapPinIcon size={14} className="text-text-muted" />
+                              {mentor.location}
+                            </span>
+                          ) : mentor.session_frequency ? (
+                            <span className="flex items-center gap-1.5">
+                              <ClockIcon size={14} className="text-text-muted" />
+                              {mentor.session_frequency}
+                            </span>
+                          ) : null}
                           <span className="flex items-center gap-1.5">
                             <GlobeIcon size={14} className="text-text-muted" />
                             {mentor.languages.join(", ")}

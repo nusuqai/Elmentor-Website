@@ -9,6 +9,7 @@ interface AiChatPanelProps {
   onClose: () => void;
   initialQuery?: string;
   onViewProfile?: (mentorId: string) => void;
+  lang?: string;
 }
 
 const QUICK_STARTS = [
@@ -18,7 +19,7 @@ const QUICK_STARTS = [
   "I'm in fintech and want to grow into a senior strategy role."
 ];
 
-export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfile }: AiChatPanelProps) {
+export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfile, lang = 'en' }: AiChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -44,7 +45,7 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
           'Content-Type': 'application/json',
           'mcp-session-id': sessionId,
         },
-        body: JSON.stringify({ query, topK: 6 }),
+        body: JSON.stringify({ query, topK: 6, lang }),
       });
       
       if (!res.ok) {
