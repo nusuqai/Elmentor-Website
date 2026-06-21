@@ -996,10 +996,9 @@ function ChatPageContent({ lang }: { lang: "en" | "ar" }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Disabled auto-scroll to the bottom on new messages
-  // useEffect(() => {
-  //   bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages, loading]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   useEffect(() => {
     if (mentorParam && sessionId && !initDone.current) {

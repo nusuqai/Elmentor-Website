@@ -71,12 +71,12 @@ export default function AiChatPanel({ isOpen, onClose, initialQuery, onViewProfi
     }
   }, [loading, messages, sessionId]);
 
-  // Auto scroll to bottom - disabled on new messages
-  // useEffect(() => {
-  //   if (messagesEndRef.current) {
-  //     messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  //   }
-  // }, [messages, loading]);
+  // Auto scroll to bottom
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loading]);
 
   // Handle initial query
   useEffect(() => {
